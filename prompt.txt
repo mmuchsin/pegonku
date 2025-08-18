@@ -1,0 +1,130 @@
+Act as an expert full-stack developer. Your task is to generate a complete, single-page application named "Pegonku" using Nuxt.js 3, TypeScript, and Tailwind CSS. The entire application, including the database, must be self-contained for local development using Drizzle ORM.
+
+**1. Project Setup:**
+- Initialize a Nuxt.js 3 project with TypeScript and pnpm.
+- Integrate Tailwind CSS for styling.
+- **Setup Drizzle ORM with the `better-sqlite3` driver.** Create a database file at `server/db/sqlite.db`.
+- Install necessary dependencies: `drizzle-orm`, `better-sqlite3`, and dev dependencies `drizzle-kit`, `typescript`.
+
+**2. Database Schema (Drizzle):**
+- Create a schema file at `server/db/schema.ts`.
+- In this file, define a table named `custom_dictionary` using Drizzle's `sqliteTable` function.
+- The table must have the following columns:
+  - `id`: integer, primary key, autoincrement.
+  - `teks_ind`: text, unique.
+  - `pegon`: text.
+  - `createdAt`: integer, with a default value of the current timestamp.
+
+**3. Backend API (Nuxt Server Routes with Drizzle):**
+- Create a Drizzle client instance at `server/db/index.ts`.
+- Create a server route `GET /api/dictionary`. This endpoint must use the Drizzle client to fetch all entries from the `custom_dictionary` table.
+- Create a server route `POST /api/dictionary`. This endpoint must use the Drizzle client to `upsert` a new entry using `onConflictDoUpdate`. It should find an entry by `teks_ind`; if it exists, update the `pegon` value, otherwise create a new entry.
+
+**4. Application Structure (Two Pages):**
+- **Main Page (`/`):** The primary transliteration view.
+- **Dictionary Page (`/kamus`):** A view to display the custom dictionary entries.
+
+**5. Frontend Logic & State Management:**
+- Use a Nuxt 3 `useState` composable to manage the custom dictionary state.
+- **On app load, use `useFetch('/api/dictionary')` to fetch the initial dictionary data from the local SQLite database and populate the state.**
+- **When a user saves a new entry in the modal, make a POST request using `$fetch('/api/dictionary')` to save the data to the SQLite database, then refresh the state.**
+
+**6. UI Components:**
+- **Main Page:** Header "Indonesia → Pegon", input textarea, read-only output div, bottom navigation. Implement real-time transliteration.
+- **Dictionary Page:** Header with a "Back" button, and a list that displays the dictionary entries from the state.
+- **Modal:** A modal to add/edit entries, which triggers the POST request on save.
+
+**7. Transliteration Logic (`utils/logic.ts`):**
+- Create a file at `utils/logic.ts`.
+- This file must contain the following complete transliteration logic. This logic must check both the dynamic custom dictionary (passed as an argument) and a static internal dictionary.
+
+const manualCorrections: Record<string, string> = {
+  allah: "الله", hadis: "حَدِيْث", ulama: "عُلَمَاء", syariat: "شَرِيْعَة", fiqih: "فِقْه",
+  yakni: "يَاكْنِيْ", sudah: "سُوْدَاهْ", teks: "تٓيكْسْ", untuk: "أُوْنْتُوْكْ",
+  dengan: "دٓعَانْ", dan: "دَانْ", yang: "يَاعْ", mereka: "مٓرٓيكَا",
+  keadaan: "كٓئَادَائَانْ", menghilangkan: "مٓعْهِيلَاعْكَانْ", membuat: "مٓمْبُوَاتْ",
+  sebagian: "سٓبَاڮِيَانْ",
+};
+
+const characterMap: Record<string, string> = {
+  'ny': 'ۑ', 'ng': 'ع', 'sy': 'ش', 'c': 'چ', 'g': 'ڮ', 'p': 'ف', 'f': 'ف', 'v': 'ف',
+  'k': 'ك', 'q': 'ق', 'b': 'ب', 'd': 'د', 'h': 'ه', 'j': 'ج', 'l': 'ل', 'm': 'م',
+  'n': 'ن', 'r': 'ر', 's': 'س', 't': 'ت', 'w': 'و', 'y': 'ي', 'z': 'ز'
+};
+const vowelMap: Record<string, string> = { 'a': 'َا', 'i': 'ِي', 'u': 'ُوْ', 'o': 'َوْ', 'e': 'ٓ' };
+const numberMap: Record<string, string> = { '0': '٠', '1': '١', '2': '٢', '3': '٣', '4': '٤', '5': '٥', '6': '٦', '7': '٧', '8': '٨', '9': '٩' };
+const vowels = "aiueo";
+
+const isVowel = (char: string) => vowels.includes(char);
+const needsSukun = (currentIndex: number, word: string) => currentIndex + 1 >= word.length || !isVowel(word[currentIndex + 1]);
+
+export function transliterateWord(word: string, customDictionary: {teks_ind: string, pegon: string}[]): string {
+    const lowerWord = word.toLowerCase();
+    const cleanWord = lowerWord.replace(/[.,;:!?'"()]/g, '');
+    const punctuation = lowerWord.replace(/[^.,;:!?'"()]/g, '');
+
+    const customEntry = customDictionary.find(e => e.teks_ind === cleanWord);
+    if (customEntry) return customEntry.pegon + punctuation;
+    if (manualCorrections[cleanWord]) return manualCorrections[cleanWord] + punctuation;
+
+    let pegonResult = "";
+    let i = 0;
+    while (i < cleanWord.length) {
+        let consumed = 1;
+        if (i + 1 < cleanWord.length) {
+            const twoChars = cleanWord.substring(i, i + 2);
+            if (twoChars === 'ua') { pegonResult += "وَا"; consumed = 2; i += consumed; continue; }
+            if (characterMap[twoChars]) {
+                pegonResult += characterMap[twoChars];
+                consumed = 2;
+                if (needsSukun(i + 1, cleanWord)) pegonResult += "ْ";
+                i += consumed;
+                continue;
+            }
+        }
+        const oneChar = cleanWord[i];
+        if (isVowel(oneChar)) {
+             if (oneChar === 'e') {
+                const prevChar = cleanWord[i-1] || '';
+                if (isVowel(prevChar) || i === 0) {
+                    pegonResult += 'ئ' + vowelMap[oneChar];
+                } else {
+                    pegonResult += vowelMap[oneChar];
+                }
+            } else {
+               pegonResult += vowelMap[oneChar];
+            }
+        } else if (characterMap[oneChar]) {
+            pegonResult += characterMap[oneChar];
+            if (needsSukun(i, cleanWord)) pegonResult += "ْ";
+        } else if (numberMap[oneChar]) {
+            pegonResult += numberMap[oneChar];
+        } else {
+            pegonResult += oneChar;
+        }
+        i += consumed;
+    }
+    return pegonResult.replace(/([َاِيُوَْوْٓ])ْ/g, '$1') + punctuation;
+}
+
+export function transliterateSentence(text: string, customDictionary: {teks_ind: string, pegon: string}[]): string {
+    const words = text.split(/(\s+)/);
+    return words.map(part => {
+        if (part.trim() === '') return part;
+        return transliterateWord(part, customDictionary);
+    }).join('');
+}
+
+export function transliterateParagraph(text: string, customDictionary: {teks_ind: string, pegon: string}[]): string {
+    let preprocessedText = text.replace(/\b(\d+)H\b/gi, '$1 Hijriah');
+    preprocessedText = preprocessedText.replace(/\bno\.\b/gi, 'nomor');
+
+    const lines = preprocessedText.split('\n');
+    const transliteratedLines = lines.map(line => {
+        const content = line.trim();
+        if (content === '') return line;
+        return transliterateSentence(content, customDictionary);
+    });
+    
+    return transliteratedLines.join('\n').replace(/,/g, '،');
+}
