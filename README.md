@@ -1,23 +1,52 @@
-# Nuxt Minimal Starter
+# Pegonku
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Pegonku is a web-based application for transliterating Indonesian (Latin script) text into Pegon (Arabic script). It's built with Nuxt.js, TypeScript, and Tailwind CSS, featuring a powerful conversion engine and a customizable user dictionary backed by a PostgreSQL database via Drizzle ORM.
 
-## Setup
+## Features
 
-Make sure to install dependencies:
+-   **Button-driven Transliteration**: Convert Indonesian text to Pegon script with a simple button click.
+-   **Custom Dictionary**: Add, view, and manage your own word translations to improve accuracy.
+-   **Upsert Functionality**: Easily add new words or update existing ones in the dictionary.
+-   **REST API**: Simple API endpoints for managing dictionary entries.
+-   **Modern Tech Stack**: Built with Nuxt 3, Drizzle ORM, and PostgreSQL.
+
+## Project Setup
+
+### Prerequisites
+
+-   [Node.js](https://nodejs.org/) (v18 or newer)
+-   [pnpm](https://pnpm.io/installation)
+-   A running [PostgreSQL](https://www.postgresql.org/) database instance.
+
+### 1. Clone the Repository
 
 ```bash
-# npm
-npm install
+git clone https://github.com/your-username/pegonku.git
+cd pegonku
+```
 
-# pnpm
+### 2. Install Dependencies
+
+```bash
 pnpm install
+```
 
-# yarn
-yarn install
+### 3. Configure Environment Variables
 
-# bun
-bun install
+Create a `.env` file by copying the example file:
+
+```bash
+cp .env.example .env
+```
+
+Now, open the `.env` file and update the database credentials to match your local PostgreSQL setup.
+
+### 4. Apply Database Schema
+
+Push the Drizzle schema to your database. This will create the `custom_dictionary` table.
+
+```bash
+pnpm db:push
 ```
 
 ## Development Server
@@ -25,51 +54,23 @@ bun install
 Start the development server on `http://localhost:3000`:
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
 pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
+
+The application should now be running and connected to your database.
 
 ## Production
 
 Build the application for production:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
 pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
 ```
 
-Locally preview production build:
+Locally preview the production build:
 
 ```bash
-# npm
-npm run preview
-
-# pnpm
 pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
