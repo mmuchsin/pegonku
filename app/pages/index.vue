@@ -150,11 +150,8 @@ async function handleConvert() { // 2. Jadikan fungsinya async
     
     await nextTick(); // 3. Tunggu hingga DOM diperbarui
 
-    // Sekarang, perintah scroll akan bekerja dengan benar
-    const outputSection = document.getElementById('output-section');
-    if (outputSection) {
-        outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // // Sekarang, perintah scroll akan bekerja dengan benar
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 }
 
 // NEW: Function to clear all text and scroll to top
