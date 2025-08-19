@@ -1,22 +1,18 @@
-const manualCorrections: Record<string, string> = {
-  allah: "الله", hadis: "حَدِيْث", ulama: "عُلَمَاء", syariat: "شَرِيْعَة", fiqih: "فِقْه",
-  yakni: "يَاكْنِيْ", sudah: "سُوْدَاهْ", teks: "تٓيكْسْ", untuk: "أُوْنْتُوْكْ",
-  dengan: "دٓعَانْ", dan: "دَانْ", yang: "يَاعْ", mereka: "مٓرٓيكَا",
-  keadaan: "كٓئَادَائَانْ", menghilangkan: "مٓعْهِيلَاعْكَانْ", membuat: "مٓمْبُوَاتْ",
-  sebagian: "سٓبَاڮِيَانْ",
-};
+// manualCorrections removed — custom dictionary (`customDictionary`) should
+// provide any manual overrides. Transliteration now uses `customDictionary`
+// entries (fetched from the server) via the existing `customDictionary` param.
 
 const characterMap: Record<string, string> = {
   'ny': 'ۑ', 'ng': 'ع', 'sy': 'ش', 'c': 'چ', 'g': 'ڮ', 'p': 'ف', 'f': 'ف', 'v': 'ف',
   'k': 'ك', 'q': 'ق', 'b': 'ب', 'd': 'د', 'h': 'ه', 'j': 'ج', 'l': 'ل', 'm': 'م',
   'n': 'ن', 'r': 'ر', 's': 'س', 't': 'ت', 'w': 'و', 'y': 'ي', 'z': 'ز'
 };
-const vowelMap: Record<string, string> = { 'a': 'َا', 'i': 'ِي', 'u': 'ُوْ', 'o': 'َوْ', 'e': 'ٓ' };
+const vowelMap: Record<string, string> = { 'a': 'َا', 'i': 'ِي', 'u': 'ُوْ', 'o': 'اَوْ', 'e': 'ٓ' };
 const numberMap: Record<string, string> = { '0': '٠', '1': '١', '2': '٢', '3': '٣', '4': '٤', '5': '٥', '6': '٦', '7': '٧', '8': '٨', '9': '٩' };
 const vowels = "aiueo";
 
-const isVowel = (char: string) => vowels.includes(char);
-const needsSukun = (currentIndex: number, word: string) => currentIndex + 1 >= word.length || !isVowel(word[currentIndex + 1]);
+const isVowel = (char?: string) => typeof char === 'string' && vowels.includes(char);
+const needsSukun = (currentIndex: number, word: string) => currentIndex + 1 >= word.length || !isVowel(word.charAt(currentIndex + 1));
 
 export function transliterateWord(word: string, customDictionary: {teks_ind: string, pegon: string}[]): string {
     const lowerWord = word.toLowerCase();
@@ -25,7 +21,6 @@ export function transliterateWord(word: string, customDictionary: {teks_ind: str
 
     const customEntry = customDictionary.find(e => e.teks_ind === cleanWord);
     if (customEntry) return customEntry.pegon + punctuation;
-    if (manualCorrections[cleanWord]) return manualCorrections[cleanWord] + punctuation;
 
     let pegonResult = "";
     let i = 0;
@@ -42,23 +37,23 @@ export function transliterateWord(word: string, customDictionary: {teks_ind: str
                 continue;
             }
         }
-        const oneChar = cleanWord[i];
+        const oneChar = cleanWord.charAt(i);
         if (isVowel(oneChar)) {
              if (oneChar === 'e') {
-                const prevChar = cleanWord[i-1] || '';
+                const prevChar = cleanWord.charAt(i-1);
                 if (isVowel(prevChar) || i === 0) {
-                    pegonResult += 'ئ' + vowelMap[oneChar];
+                    pegonResult += 'ئ' + (vowelMap[oneChar] || '');
                 } else {
-                    pegonResult += vowelMap[oneChar];
+                    pegonResult += (vowelMap[oneChar] || '');
                 }
             } else {
-               pegonResult += vowelMap[oneChar];
+               pegonResult += (vowelMap[oneChar] || '');
             }
         } else if (characterMap[oneChar]) {
-            pegonResult += characterMap[oneChar];
+            pegonResult += (characterMap[oneChar] || '');
             if (needsSukun(i, cleanWord)) pegonResult += "ْ";
         } else if (numberMap[oneChar]) {
-            pegonResult += numberMap[oneChar];
+            pegonResult += (numberMap[oneChar] || '');
         } else {
             pegonResult += oneChar;
         }
