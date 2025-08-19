@@ -19,16 +19,15 @@
         </li>
       </ul>
 
-      <div class="flex items-center justify-between mt-4 space-x-4">
-        <div class="flex items-center space-x-2">
-          <button class="px-3 py-1 bg-gray-200 rounded" :disabled="currentPage === 1" @click="prevPage">Prev</button>
-          <button class="px-3 py-1 bg-gray-200 rounded" :disabled="currentPage === totalPages"
-            @click="nextPage">Next</button>
+      <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <button class="px-2 py-1 text-sm bg-gray-200 rounded disabled:opacity-50" :disabled="currentPage === 1" @click="prevPage">Prev</button>
+          <button class="px-2 py-1 text-sm bg-gray-200 rounded disabled:opacity-50" :disabled="currentPage === totalPages" @click="nextPage">Next</button>
         </div>
 
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center gap-2">
           <label for="perPage" class="text-sm">Per halaman:</label>
-          <select id="perPage" v-model.number="perPage" class="border rounded px-2 py-1">
+          <select id="perPage" v-model.number="perPage" class="border rounded px-2 py-1 text-sm w-24">
             <option :value="5">5</option>
             <option :value="10">10</option>
             <option :value="20">20</option>
@@ -40,9 +39,9 @@
         </div>
       </div>
 
-      <nav class="mt-3 flex justify-center space-x-1">
+      <nav class="mt-3 flex flex-wrap justify-center gap-2">
         <button v-for="p in pagesToShow" :key="p" @click="goToPage(p)"
-          :class="['px-3 py-1 rounded', { 'bg-blue-500 text-white': p === currentPage, 'bg-gray-100': p !== currentPage }]">
+          :class="[ 'px-2 py-1 rounded text-sm', { 'bg-blue-500 text-white': p === currentPage, 'bg-gray-100': p !== currentPage } ]">
           {{ p }}
         </button>
       </nav>
