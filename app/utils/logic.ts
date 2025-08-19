@@ -16,11 +16,21 @@ const needsSukun = (currentIndex: number, word: string) => currentIndex + 1 >= w
 
 export function transliterateWord(word: string, customDictionary: {teks_ind: string, pegon: string}[]): string {
     const lowerWord = word.toLowerCase();
-    const cleanWord = lowerWord.replace(/[.,;:!?'"()]/g, '');
-    const punctuation = lowerWord.replace(/[^.,;:!?'"()]/g, '');
+    // Extract leading and trailing punctuation so we can reattach in-place
+    const leadingPunctMatch = lowerWord.match(/^[.,;:!?'"()]+/);
+    const trailingPunctMatch = lowerWord.match(/[.,;:!?'"()]+$/);
+    const leadingPunct = leadingPunctMatch ? leadingPunctMatch[0] : '';
+    const trailingPunct = trailingPunctMatch ? trailingPunctMatch[0] : '';
+
+    const coreStart = leadingPunct.length;
+    const coreEnd = Math.max(coreStart, lowerWord.length - trailingPunct.length);
+    let core = lowerWord.substring(coreStart, coreEnd);
+    // If token contains only punctuation, return as-is
+    if (!core) return lowerWord;
+    const cleanWord = core.replace(/[.,;:!?'"()]/g, '');
 
     const customEntry = customDictionary.find(e => e.teks_ind === cleanWord);
-    if (customEntry) return customEntry.pegon + punctuation;
+    if (customEntry) return leadingPunct + customEntry.pegon + trailingPunct;
 
     let pegonResult = "";
     let i = 0;
@@ -29,6 +39,7 @@ export function transliterateWord(word: string, customDictionary: {teks_ind: str
         if (i + 1 < cleanWord.length) {
             const twoChars = cleanWord.substring(i, i + 2);
             if (twoChars === 'ua') { pegonResult += "وَا"; consumed = 2; i += consumed; continue; }
+            if (twoChars === 'au') { pegonResult += "اَوْ"; consumed = 2; i += consumed; continue; }
             if (characterMap[twoChars]) {
                 pegonResult += characterMap[twoChars];
                 consumed = 2;
@@ -39,13 +50,19 @@ export function transliterateWord(word: string, customDictionary: {teks_ind: str
         }
         const oneChar = cleanWord.charAt(i);
         if (isVowel(oneChar)) {
-             if (oneChar === 'e') {
-                const prevChar = cleanWord.charAt(i-1);
-                if (isVowel(prevChar) || i === 0) {
-                    pegonResult += 'ئ' + (vowelMap[oneChar] || '');
-                } else {
-                    pegonResult += (vowelMap[oneChar] || '');
-                }
+             // If the word begins with 'i', use the initial form 'اِ'
+             if (oneChar === 'i' && i === 0) {
+                 pegonResult += 'اِ';
+            } else if (oneChar === 'e') {
+               const prevChar = cleanWord.charAt(i-1);
+               // If 'e' is at the beginning of the word, use initial form 'آ'
+               if (i === 0) {
+                   pegonResult += 'آ';
+               } else if (isVowel(prevChar)) {
+                   pegonResult += 'ئ' + (vowelMap[oneChar] || '');
+               } else {
+                   pegonResult += (vowelMap[oneChar] || '');
+               }
             } else {
                pegonResult += (vowelMap[oneChar] || '');
             }
@@ -59,7 +76,7 @@ export function transliterateWord(word: string, customDictionary: {teks_ind: str
         }
         i += consumed;
     }
-    return pegonResult.replace(/([َاِيُوَْوْٓ])ْ/g, '$1') + punctuation;
+    return leadingPunct + pegonResult.replace(/([َاِيُوَْوْٓ])ْ/g, '$1') + trailingPunct;
 }
 
 export function transliterateSentence(text: string, customDictionary: {teks_ind: string, pegon: string}[]): string {
