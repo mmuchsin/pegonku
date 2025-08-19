@@ -24,13 +24,12 @@
                 @click="handleConvert"
                 class="bg-emerald-600 text-white font-bold py-3 px-6 rounded-md shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all transform hover:scale-105 flex items-center gap-2"
             >
-                <Icon name="lucide:square-arrow-right" class="h-5 w-5" />
                 <span>Convert</span>
             </button>
         </div>
 
         <!-- Output Display -->
-        <div class="relative">
+        <div id="output-section" class="relative">
           <div
             class="w-full p-4 pb-14 border border-slate-200 rounded-xl bg-slate-50 text-right whitespace-pre-wrap font-pegon text-3xl leading-relaxed"
             dir="rtl"
@@ -40,15 +39,24 @@
             <span v-else>{{ pegonResult }}</span>
           </div>
           
-          <!-- Copy Button with Feedback -->
-          <button 
-            @click="copyPegonResult" 
-            class="absolute bottom-3 right-3 p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-100 rounded-full transition-colors"
-            title="Salin Hasil Pegon"
-          >
-            <Icon v-if="!copied" name="lucide:copy" class="h-6 w-6" />
-            <Icon v-else name="lucide:copy-check" class="h-6 w-6 text-emerald-600" />
-          </button>
+          <!-- Action Buttons -->
+          <div class="absolute bottom-3 right-3 flex gap-2">
+            <button 
+              @click="clearAll" 
+              class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-100 rounded-full transition-colors"
+              title="Hapus Semua Teks"
+            >
+              <Icon name="lucide:square-x" class="h-6 w-6" />
+            </button>
+            <button 
+              @click="copyPegonResult" 
+              class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-100 rounded-full transition-colors"
+              title="Salin Hasil Pegon"
+            >
+              <Icon v-if="!copied" name="lucide:copy" class="h-6 w-6" />
+              <Icon v-else name="lucide:copy-check" class="h-6 w-6 text-emerald-600" />
+            </button>
+          </div>
         </div>
       </main>
       
@@ -97,6 +105,11 @@
 <style>
   /* Import fonts for the application */
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap');
+  
+  /* NEW: Add smooth scrolling behavior to the entire page */
+  html {
+    scroll-behavior: smooth;
+  }
 </style>
 
 <script setup lang="ts">
@@ -111,7 +124,7 @@ type DictionaryEntry = {
 };
 
 const inputText = ref('');
-const pegonResult = ref(''); // UPDATED: Changed from computed to ref
+const pegonResult = ref('');
 const showModal = ref(false);
 const newWord = ref({ teks_ind: '', pegon: '' });
 const customDictionary = useState<DictionaryEntry[]>('customDictionary', () => []);
@@ -127,23 +140,43 @@ watch(data, (newData) => {
   }
 }, { immediate: true });
 
-// NEW: Function to handle the conversion
-function handleConvert() {
+// Function to handle the conversion and scroll
+async function handleConvert() { // 2. Jadikan fungsinya async
     if (!inputText.value.trim()) {
         pegonResult.value = '';
         return;
     }
     pegonResult.value = transliterateParagraph(inputText.value, customDictionary.value);
+    
+    await nextTick(); // 3. Tunggu hingga DOM diperbarui
+
+    // Sekarang, perintah scroll akan bekerja dengan benar
+    const outputSection = document.getElementById('output-section');
+    if (outputSection) {
+        outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// NEW: Function to clear all text and scroll to top
+function clearAll() {
+    inputText.value = '';
+    pegonResult.value = '';
+    jumpToTop();
+}
+
+// NEW: Function to scroll to the top of the page
+function jumpToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Function to copy the Pegon result with visual feedback
 async function copyPegonResult() {
-  if (!pegonResult.value) { // UPDATED: Check pegonResult
+  if (!pegonResult.value) {
     alert('Tidak ada teks untuk disalin.');
     return;
   }
   try {
-    await navigator.clipboard.writeText(pegonResult.value); // UPDATED: Copy pegonResult
+    await navigator.clipboard.writeText(pegonResult.value);
     copied.value = true;
     setTimeout(() => {
       copied.value = false;
