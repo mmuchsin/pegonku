@@ -38,7 +38,18 @@ export function transliterateWord(word: string, customDictionary: {teks_ind: str
         let consumed = 1;
         if (i + 1 < cleanWord.length) {
             const twoChars = cleanWord.substring(i, i + 2);
-            if (twoChars === 'ua') { pegonResult += "وَا"; consumed = 2; i += consumed; continue; }
+            if (twoChars === 'ua') {
+                // If there's already a preceding transliteration (consonant), attach dammah to it;
+                // otherwise keep starting form 'وَا'. This makes 'dua' -> 'دُوَا'.
+                if (pegonResult.length === 0) {
+                    pegonResult += "وَا";
+                } else {
+                    pegonResult += "ُوَا";
+                }
+                consumed = 2;
+                i += consumed;
+                continue;
+            }
             if (twoChars === 'au') { pegonResult += "اَوْ"; consumed = 2; i += consumed; continue; }
             if (characterMap[twoChars]) {
                 pegonResult += characterMap[twoChars];
@@ -50,22 +61,27 @@ export function transliterateWord(word: string, customDictionary: {teks_ind: str
         }
         const oneChar = cleanWord.charAt(i);
         if (isVowel(oneChar)) {
-             // If the word begins with 'i', use the initial form 'اِ'
-             if (oneChar === 'i' && i === 0) {
-                 pegonResult += 'اِ';
-            } else if (oneChar === 'e') {
-               const prevChar = cleanWord.charAt(i-1);
-               // If 'e' is at the beginning of the word, use initial form 'آ'
-               if (i === 0) {
-                   pegonResult += 'آ';
-               } else if (isVowel(prevChar)) {
-                   pegonResult += 'ئ' + (vowelMap[oneChar] || '');
-               } else {
-                   pegonResult += (vowelMap[oneChar] || '');
-               }
-            } else {
-               pegonResult += (vowelMap[oneChar] || '');
-            }
+             // Handle vowels at the beginning of a word
+             if (oneChar === 'a' && i === 0) {
+                pegonResult += 'اَ';
+             } else if (oneChar === 'i' && i === 0) {
+                pegonResult += 'اِ';
+             } else if (oneChar === 'u' && i === 0) { // NEW: Handle 'u' at the beginning of a word
+                pegonResult += 'اُ';
+             } else if (oneChar === 'e') {
+                const prevChar = cleanWord.charAt(i-1);
+                // If 'e' is at the beginning of the word, use initial form 'آ'
+                if (i === 0) {
+                    pegonResult += 'آ';
+                } else if (isVowel(prevChar)) {
+                    pegonResult += 'ئ' + (vowelMap[oneChar] || '');
+                } else {
+                    pegonResult += (vowelMap[oneChar] || '');
+                }
+             } else {
+                // Handle vowels in the middle of the word
+                pegonResult += (vowelMap[oneChar] || '');
+             }
         } else if (characterMap[oneChar]) {
             pegonResult += (characterMap[oneChar] || '');
             if (needsSukun(i, cleanWord)) pegonResult += "ْ";
@@ -76,7 +92,7 @@ export function transliterateWord(word: string, customDictionary: {teks_ind: str
         }
         i += consumed;
     }
-    return leadingPunct + pegonResult.replace(/([َاِيُوَْوْٓ])ْ/g, '$1') + trailingPunct;
+    return leadingPunct + pegonResult.replace(/([َاِيُوَْوْٓ])ْ/g, '$1') + trailingPunct;
 }
 
 export function transliterateSentence(text: string, customDictionary: {teks_ind: string, pegon: string}[]): string {
