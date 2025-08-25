@@ -120,7 +120,7 @@ type DictionaryEntry = {
   id?: number; 
   teks_ind: string; 
   pegon: string; 
-  created_at?: Date 
+  created_at?: string 
 };
 
 const inputText = ref('');
