@@ -464,7 +464,7 @@ const arabicTerms = [
 
         <!-- Complete Button -->
 
-        <UButton v-if="hasCompletedOnboarding" icon="lucide:home" label="Kembali ke Home" color="primary" size="sm" to="/">
+        <UButton v-if="hasCompletedOnboarding" icon="lucide:home" label="Kembali ke Home" color="primary" size="xl" to="/">
 
         </UButton>
         <UButton
