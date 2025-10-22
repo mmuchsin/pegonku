@@ -32,8 +32,33 @@ function clearSearch() {
   globalFilter.value = ''
 }
 
-const table = useTemplateRef('table')
 const toast = useToast()
+
+const table = useTemplateRef('table')
+
+// ✨ Add computed values for pagination
+const paginationInfo = computed(() => {
+  if (!table.value?.tableApi) {
+    return {
+      start: 0,
+      end: 0,
+      total: 0,
+      currentPage: 1,
+      pageSize: 10
+    }
+  }
+
+  const state = table.value.tableApi.getState().pagination
+  const totalRows = table.value.tableApi.getFilteredRowModel().rows.length
+
+  return {
+    start: (state.pageIndex * state.pageSize) + 1,
+    end: Math.min((state.pageIndex + 1) * state.pageSize, totalRows),
+    total: totalRows,
+    currentPage: state.pageIndex + 1,
+    pageSize: state.pageSize
+  }
+})
 
 // Edit modal state
 const isEditModalOpen = ref(false)
@@ -264,23 +289,18 @@ function cancelDelete() {
         />
       </div>
 
-      <!-- Pagination Footer -->
+      <!-- ✨ Cleaner Pagination Footer -->
       <div v-if="apiData && table?.tableApi" class="flex items-center justify-between mt-4">
         <div class="text-sm text-muted">
-          Menampilkan {{ (table.tableApi.getState().pagination.pageIndex * table.tableApi.getState().pagination.pageSize) + 1 }}-{{ 
-            Math.min(
-              (table.tableApi.getState().pagination.pageIndex + 1) * table.tableApi.getState().pagination.pageSize, 
-              table.tableApi.getFilteredRowModel().rows.length
-            ) 
-          }} dari {{ table.tableApi.getFilteredRowModel().rows.length }}
+          Menampilkan {{ paginationInfo.start }}-{{ paginationInfo.end }} dari {{ paginationInfo.total }}
         </div>
 
         <UPagination 
           show-edges 
-          :default-page="table.tableApi.getState().pagination.pageIndex + 1"
-          :items-per-page="table.tableApi.getState().pagination.pageSize"
-          :total="table.tableApi.getFilteredRowModel().rows.length"
-          @update:page="(p) => table.tableApi.setPageIndex(p - 1)" 
+          :default-page="paginationInfo.currentPage"
+          :items-per-page="paginationInfo.pageSize"
+          :total="paginationInfo.total"
+          @update:page="(p: number) => table!.tableApi!.setPageIndex(p - 1)" 
         />
       </div>
     </div>
