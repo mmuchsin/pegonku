@@ -1,20 +1,25 @@
 <script setup lang="ts">
 import { useGuideStatus } from '~/composables/useGuideStatus'
+import type { TableColumn } from '@nuxt/ui'
 
 // Use the composable
 const { hasReadGuide, markGuideAsRead } = useGuideStatus()
 
-// Initialize state
-const hasCompletedOnboarding = ref(hasReadGuide())
+// Initialize state - always false on server
+const hasCompletedOnboarding = ref(false)
 const hasScrolledToBottom = ref(false)
 const hasConfirmed = ref(false)
-const appButtonRef = ref<HTMLElement | null>(null)
+
+// Check localStorage only on client after hydration
+onMounted(() => {
+  hasCompletedOnboarding.value = hasReadGuide()
+})
 
 // Handle scroll detection
 function handleScroll(event: Event) {
   const element = event.target as HTMLElement
   const scrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50
-  
+
   if (scrolledToBottom && !hasScrolledToBottom.value) {
     hasScrolledToBottom.value = true
   }
@@ -25,25 +30,14 @@ function completeOnboarding() {
   if (hasConfirmed.value && hasScrolledToBottom.value) {
     hasCompletedOnboarding.value = true
     markGuideAsRead()
-    
-    // Navigate to the main index page
+
     nextTick(() => {
       navigateTo('/')
     })
   }
 }
 
-// Reopen guide
-function reopenGuide() {
-  if (process.client) {
-    localStorage.removeItem('hasReadGuide')
-    hasCompletedOnboarding.value = false
-    hasScrolledToBottom.value = false
-    hasConfirmed.value = false
-  }
-}
-
-// Your existing data arrays (keeping them as is)
+// VOWEL TABLE DATA & COLUMNS
 const vowelData = [
   {
     letter: 'A',
@@ -53,30 +47,66 @@ const vowelData = [
   },
   {
     letter: 'I',
-    awal: { arab: 'اِ', example: 'اِتُوْ', latin: 'Itu' },
+    awal: { arab: 'اِ', example: 'اِتُو', latin: 'Itu' },
     tengah: { arab: 'ـِي', example: 'تِيْڮَا', latin: 'Tiga' },
     akhir: { arab: 'ـِي', example: 'سِينِي', latin: 'Sini' }
   },
   {
     letter: 'U',
-    awal: { arab: 'اُ', example: 'اُبِيْ', latin: 'Ubi' },
-    tengah: { arab: 'ـُو', example: 'كُوْكُوْ', latin: 'Kuku' },
-    akhir: { arab: 'ـُو', example: 'سُوكُوْ', latin: 'Suku' }
+    awal: { arab: 'اُ', example: 'اُبِي', latin: 'Ubi' },
+    tengah: { arab: 'ـُو', example: 'كُوكُو', latin: 'Kuku' },
+    akhir: { arab: 'ـُو', example: 'سُوكُو', latin: 'Suku' }
   },
   {
     letter: 'E',
     awal: { arab: 'آ', example: 'آنَاكْ', latin: 'Enak' },
     tengah: { arab: 'ـٓ', example: 'بٓكَالْ', latin: 'Bekal' },
-    akhir: { arab: 'ـٓ', example: 'نَاسِيْ', latin: 'Nasi' }
+    akhir: { arab: 'ـٓ', example: 'نَاسِي', latin: 'Nasi' }
   },
   {
     letter: 'O',
     awal: { arab: 'ؤُ', example: 'ؤُرَاعْ', latin: 'Orang' },
-    tengah: { arab: 'ـُو', example: 'تُوْفِي', latin: 'Topi' },
+    tengah: { arab: 'ـُو', example: 'تُوفِي', latin: 'Topi' },
     akhir: { arab: 'ـُو', example: 'جَاڮُو', latin: 'Jago' }
   }
 ]
 
+const vowelColumns: TableColumn<typeof vowelData[0]>[] = [
+  {
+    accessorKey: 'letter',
+    header: 'Huruf',
+    cell: ({ row }) => h('span', { class: 'font-bold text-xl text-primary' }, row.original.letter)
+  },
+  {
+    id: 'awal',
+    header: 'Di Awal',
+    cell: ({ row }) => h('div', { class: 'space-y-2 text-center' }, [
+      h('div', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.awal.arab),
+      h('div', { class: 'text-xl font-pegon', dir: 'rtl' }, row.original.awal.example),
+      h('div', { class: 'text-sm text-muted' }, row.original.awal.latin)
+    ])
+  },
+  {
+    id: 'tengah',
+    header: 'Di Tengah',
+    cell: ({ row }) => h('div', { class: 'space-y-2 text-center' }, [
+      h('div', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.tengah.arab),
+      h('div', { class: 'text-xl font-pegon', dir: 'rtl' }, row.original.tengah.example),
+      h('div', { class: 'text-sm text-muted' }, row.original.tengah.latin)
+    ])
+  },
+  {
+    id: 'akhir',
+    header: 'Di Akhir',
+    cell: ({ row }) => h('div', { class: 'space-y-2 text-center' }, [
+      h('div', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.akhir.arab),
+      h('div', { class: 'text-xl font-pegon', dir: 'rtl' }, row.original.akhir.example),
+      h('div', { class: 'text-sm text-muted' }, row.original.akhir.latin)
+    ])
+  }
+]
+
+// CONSONANT TABLE DATA & COLUMNS
 const consonantData = [
   { latin: 'B', pegon: 'ب' }, { latin: 'K', pegon: 'ك' }, { latin: 'S', pegon: 'س' },
   { latin: 'C', pegon: 'چ' }, { latin: 'L', pegon: 'ل' }, { latin: 'T', pegon: 'ت' },
@@ -84,15 +114,61 @@ const consonantData = [
   { latin: 'F', pegon: 'ف' }, { latin: 'N', pegon: 'ن' }, { latin: 'W', pegon: 'و' },
   { latin: 'G', pegon: 'ڮ' }, { latin: 'P', pegon: 'ف' }, { latin: 'Y', pegon: 'ي' },
   { latin: 'H', pegon: 'ه' }, { latin: 'Q', pegon: 'ق' }, { latin: 'Z', pegon: 'ز' },
-  { latin: 'J', pegon: 'ج' }, { latin: 'R', pegon: 'ر' }, { latin: '', pegon: '' }
+  { latin: 'J', pegon: 'ج' }, { latin: 'R', pegon: 'ر' }
+].filter(item => item.latin) // Remove empty entries
+
+const consonantColumns: TableColumn<typeof consonantData[0]>[] = [
+  {
+    accessorKey: 'latin',
+    header: 'Latin',
+    cell: ({ row }) => h('span', { class: 'font-bold text-lg' }, row.original.latin)
+  },
+  {
+    accessorKey: 'pegon',
+    header: 'Pegon',
+    cell: ({ row }) => h('span', { class: 'text-3xl font-pegon', dir: 'rtl' }, row.original.pegon)
+  }
 ]
 
+// Dynamically split consonants into 3 columns
+const consonantColumns3 = computed(() => {
+  const perColumn = Math.ceil(consonantData.length / 3)
+  return [
+    consonantData.slice(0, perColumn),
+    consonantData.slice(perColumn, perColumn * 2),
+    consonantData.slice(perColumn * 2)
+  ]
+})
+
+// SPECIAL COMBINATIONS TABLE DATA & COLUMNS
 const specialCombinations = [
-  { combo: 'NG', pegon: 'ع', example: 'عَاجِي', meaning: 'Ngaji' },
-  { combo: 'NY', pegon: 'ۑ', example: 'ۑَامُوكْ', meaning: 'Nyamuk' },
-  { combo: 'SY', pegon: 'ش', example: 'شُوْكُورْ', meaning: 'Syukur' }
+  { combo: 'NG', pegon: 'ع', example: 'عَاجِي', read: 'Ngaji' },
+  { combo: 'NY', pegon: 'ۑ', example: 'ۑَامُوكْ', read: 'Nyamuk' },
+  { combo: 'SY', pegon: 'ش', example: 'شُوكُورْ', read: 'Syukur' }
 ]
 
+const specialColumns: TableColumn<typeof specialCombinations[0]>[] = [
+  {
+    accessorKey: 'combo',
+    header: 'Gabungan',
+    cell: ({ row }) => h('span', { class: 'font-medium text-xl' }, row.original.combo)
+  },
+  {
+    accessorKey: 'pegon',
+    header: 'Huruf Pegon',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.pegon)
+  },
+  {
+    accessorKey: 'example',
+    header: 'Contoh',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, [
+      h('div', { class: 'text-xl font-pegon', dir: 'rtl' }, row.original.example),
+      h('div', { class: 'text-sm text-muted' }, row.original.read)
+    ])
+  }
+]
+
+// ARABIC NAMES TABLE DATA & COLUMNS
 const arabicNames = [
   { arabic: 'مُحَمَّد', pegon: 'مُحَمَّدْ' },
   { arabic: 'عَلِيّ', pegon: 'عَلِي' },
@@ -102,6 +178,20 @@ const arabicNames = [
   { arabic: 'يُوسُف', pegon: 'يُوسُفْ' }
 ]
 
+const arabicNamesColumns: TableColumn<typeof arabicNames[0]>[] = [
+  {
+    accessorKey: 'arabic',
+    header: 'Bahasa Arab',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.arabic)
+  },
+  {
+    accessorKey: 'pegon',
+    header: 'Pegon',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.pegon)
+  }
+]
+
+// ARABIC PLACES TABLE DATA & COLUMNS
 const arabicPlaces = [
   { arabic: 'مَكَّة', pegon: 'مَكَّةْ' },
   { arabic: 'مَدِينَة', pegon: 'مَدِينَةْ' },
@@ -109,6 +199,20 @@ const arabicPlaces = [
   { arabic: 'شَام', pegon: 'شَامْ' }
 ]
 
+const arabicPlacesColumns: TableColumn<typeof arabicPlaces[0]>[] = [
+  {
+    accessorKey: 'arabic',
+    header: 'Bahasa Arab',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.arabic)
+  },
+  {
+    accessorKey: 'pegon',
+    header: 'Pegon',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.pegon)
+  }
+]
+
+// ARABIC TERMS TABLE DATA & COLUMNS
 const arabicTerms = [
   { arabic: 'إِسْلَام', pegon: 'إِسْلَامْ' },
   { arabic: 'قُرْآن', pegon: 'قُرْآنْ' },
@@ -118,6 +222,19 @@ const arabicTerms = [
   { arabic: 'تَوْحِيد', pegon: 'تَوْحِيدْ' },
   { arabic: 'شَرِيعَة', pegon: 'شَرِيعَةْ' }
 ]
+
+const arabicTermsColumns: TableColumn<typeof arabicTerms[0]>[] = [
+  {
+    accessorKey: 'arabic',
+    header: 'Bahasa Arab',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.arabic)
+  },
+  {
+    accessorKey: 'pegon',
+    header: 'Pegon',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.pegon)
+  }
+]
 </script>
 
 <template>
@@ -125,28 +242,19 @@ const arabicTerms = [
   <div class="min-h-screen bg-elevated p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
       <!-- Header Alert -->
-      <UAlert
-        color="warning"
-        variant="solid"
-        title="📖 Panduan Pegon - Wajib Dibaca"
+      <UAlert color="warning" variant="solid" title="📖 Panduan Pegon - Wajib Dibaca"
         description="Silakan baca panduan lengkap ini dengan seksama sebelum menggunakan aplikasi. Pemahaman yang baik akan membantu Anda menulis Pegon dengan benar."
-        class="mb-6"
-      />
+        class="mb-6" />
 
       <!-- Main Content -->
       <div class="space-y-6">
-        <UAlert
-          color="info"
-          variant="soft"
-          icon="i-lucide-info"
-          description="Scroll ke bawah untuk membaca seluruh panduan hingga selesai."
-        />
+        <UAlert color="info" variant="soft" icon="i-lucide-info"
+          description="Scroll ke bawah untuk membaca seluruh panduan hingga selesai." />
 
         <!-- Scrollable Content -->
         <div
           class="max-h-[70vh] overflow-y-auto p-6 md:p-8 bg-default rounded-lg border-2 border-primary/20 shadow-lg space-y-8"
-          @scroll="handleScroll"
-        >
+          @scroll="handleScroll">
           <!-- Title -->
           <div class="text-center pb-6 border-b-2 border-primary/20">
             <h1 class="text-3xl md:text-4xl font-bold text-primary mb-2">
@@ -159,67 +267,23 @@ const arabicTerms = [
           <section>
             <div class="mb-6 p-4 bg-primary/5 rounded-lg">
               <h2 class="text-2xl font-bold mb-3 flex items-center gap-2">
-                <span class="flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full text-lg">1</span>
+                <span
+                  class="flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full text-lg">1</span>
                 Huruf Vokal
               </h2>
               <p class="text-sm text-muted">
-                Huruf vokal dapat muncul di <strong>awal</strong>, <strong>tengah</strong>, atau <strong>akhir</strong> kata.
+                Huruf vokal dapat muncul di <strong>awal</strong>, <strong>tengah</strong>, atau <strong>akhir</strong>
+                kata.
               </p>
             </div>
 
-            <div class="overflow-x-auto">
-              <table class="w-full border-collapse">
-                <thead>
-                  <tr class="bg-primary text-white">
-                    <th class="border border-primary/20 p-3 text-left font-bold">Huruf</th>
-                    <th class="border border-primary/20 p-3 text-center font-bold">Di Awal</th>
-                    <th class="border border-primary/20 p-3 text-center font-bold">Contoh (Awal)</th>
-                    <th class="border border-primary/20 p-3 text-center font-bold">Di Tengah</th>
-                    <th class="border border-primary/20 p-3 text-center font-bold">Contoh (Tengah)</th>
-                    <th class="border border-primary/20 p-3 text-center font-bold">Di Akhir</th>
-                    <th class="border border-primary/20 p-3 text-center font-bold">Contoh (Akhir)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(vowel, index) in vowelData"
-                    :key="vowel.letter"
-                    :class="index % 2 === 0 ? 'bg-primary/5' : 'bg-default'"
-                  >
-                    <td class="border border-primary/20 p-3">
-                      <span class="font-bold text-2xl text-primary">{{ vowel.letter }}</span>
-                    </td>
-                    <td class="border border-primary/20 p-3 text-center">
-                      <span class="text-3xl font-arabic" dir="rtl">{{ vowel.awal.arab }}</span>
-                    </td>
-                    <td class="border border-primary/20 p-3 text-center">
-                      <div class="space-y-1">
-                        <div class="text-2xl font-arabic" dir="rtl">{{ vowel.awal.example }}</div>
-                        <div class="text-sm text-muted">{{ vowel.awal.latin }}</div>
-                      </div>
-                    </td>
-                    <td class="border border-primary/20 p-3 text-center">
-                      <span class="text-3xl font-arabic" dir="rtl">{{ vowel.tengah.arab }}</span>
-                    </td>
-                    <td class="border border-primary/20 p-3 text-center">
-                      <div class="space-y-1">
-                        <div class="text-2xl font-arabic" dir="rtl">{{ vowel.tengah.example }}</div>
-                        <div class="text-sm text-muted">{{ vowel.tengah.latin }}</div>
-                      </div>
-                    </td>
-                    <td class="border border-primary/20 p-3 text-center">
-                      <span class="text-3xl font-arabic" dir="rtl">{{ vowel.akhir.arab }}</span>
-                    </td>
-                    <td class="border border-primary/20 p-3 text-center">
-                      <div class="space-y-1">
-                        <div class="text-2xl font-arabic" dir="rtl">{{ vowel.akhir.example }}</div>
-                        <div class="text-sm text-muted">{{ vowel.akhir.latin }}</div>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <!-- Mobile-friendly UTable for Vowels -->
+            <UTable :data="vowelData" :columns="vowelColumns" :ui="{
+              root: 'overflow-x-auto',
+              base: 'min-w-full table-auto',
+              th: 'bg-primary text-white text-center',
+              td: 'text-center p-2 md:p-3'
+            }" />
           </section>
 
           <div class="border-t-2 border-dashed border-primary/20 my-8" />
@@ -228,7 +292,8 @@ const arabicTerms = [
           <section>
             <div class="mb-6 p-4 bg-secondary/5 rounded-lg">
               <h2 class="text-2xl font-bold mb-3 flex items-center gap-2">
-                <span class="flex items-center justify-center w-8 h-8 bg-secondary text-white rounded-full text-lg">2</span>
+                <span
+                  class="flex items-center justify-center w-8 h-8 bg-secondary text-white rounded-full text-lg">2</span>
                 Huruf Konsonan
               </h2>
               <p class="text-sm text-muted">
@@ -236,33 +301,24 @@ const arabicTerms = [
               </p>
             </div>
 
-            <div class="overflow-x-auto">
-              <table class="w-full border-collapse">
-                <thead>
-                  <tr class="bg-secondary text-white">
-                    <th class="border border-secondary/20 p-3 text-center font-bold">Huruf Latin</th>
-                    <th class="border border-secondary/20 p-3 text-center font-bold">Huruf Pegon</th>
-                    <th class="border border-secondary/20 p-3 text-center font-bold">Huruf Latin</th>
-                    <th class="border border-secondary/20 p-3 text-center font-bold">Huruf Pegon</th>
-                    <th class="border border-secondary/20 p-3 text-center font-bold">Huruf Latin</th>
-                    <th class="border border-secondary/20 p-3 text-center font-bold">Huruf Pegon</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="i in 7" :key="i" :class="i % 2 === 0 ? 'bg-secondary/5' : 'bg-default'">
-                    <template v-for="col in 3" :key="col">
-                      <td class="border border-secondary/20 p-3 text-center font-bold text-lg">
-                        {{ consonantData[(i - 1) * 3 + (col - 1)]?.latin || '' }}
-                      </td>
-                      <td class="border border-secondary/20 p-3 text-center">
-                        <span class="text-3xl font-arabic" dir="rtl">
-                          {{ consonantData[(i - 1) * 3 + (col - 1)]?.pegon || '' }}
-                        </span>
-                      </td>
-                    </template>
-                  </tr>
-                </tbody>
-              </table>
+            <!-- Mobile-friendly UTable for Consonants -->
+            <!-- Mobile: ONE complete table -->
+            <div class="lg:hidden">
+              <UTable :data="consonantData" :columns="consonantColumns" :ui="{
+                root: 'overflow-x-auto',
+                th: 'bg-secondary text-white text-center',
+                td: 'text-center p-2 md:p-3'
+              }" />
+            </div>
+
+            <!-- Desktop: THREE tables side by side -->
+            <div class="hidden lg:grid lg:grid-cols-3 gap-4">
+              <UTable v-for="(columnData, index) in consonantColumns3" :key="index" :data="columnData"
+                :columns="consonantColumns" :ui="{
+                  root: 'overflow-x-auto',
+                  th: 'bg-secondary text-white text-center',
+                  td: 'text-center p-3'
+                }" />
             </div>
           </section>
 
@@ -272,7 +328,8 @@ const arabicTerms = [
           <section>
             <div class="mb-6 p-4 bg-warning/5 rounded-lg">
               <h2 class="text-2xl font-bold mb-3 flex items-center gap-2">
-                <span class="flex items-center justify-center w-8 h-8 bg-warning text-white rounded-full text-lg">3</span>
+                <span
+                  class="flex items-center justify-center w-8 h-8 bg-warning text-white rounded-full text-lg">3</span>
                 Gabungan Spesial
               </h2>
               <p class="text-sm text-muted">
@@ -280,38 +337,11 @@ const arabicTerms = [
               </p>
             </div>
 
-            <div class="overflow-x-auto">
-              <table class="w-full border-collapse">
-                <thead>
-                  <tr class="bg-warning text-white">
-                    <th class="border border-warning/20 p-3 text-center font-bold">Gabungan</th>
-                    <th class="border border-warning/20 p-3 text-center font-bold">Huruf Pegon</th>
-                    <th class="border border-warning/20 p-3 text-center font-bold">Contoh</th>
-                    <th class="border border-warning/20 p-3 text-center font-bold">Arti</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(item, index) in specialCombinations"
-                    :key="item.combo"
-                    :class="index % 2 === 0 ? 'bg-warning/5' : 'bg-default'"
-                  >
-                    <td class="border border-warning/20 p-3 text-center font-bold text-xl">
-                      {{ item.combo }}
-                    </td>
-                    <td class="border border-warning/20 p-3 text-center">
-                      <span class="text-4xl font-arabic" dir="rtl">{{ item.pegon }}</span>
-                    </td>
-                    <td class="border border-warning/20 p-3 text-center">
-                      <span class="text-3xl font-arabic" dir="rtl">{{ item.example }}</span>
-                    </td>
-                    <td class="border border-warning/20 p-3 text-center font-medium">
-                      {{ item.meaning }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <UTable :data="specialCombinations" :columns="specialColumns" :ui="{
+              root: 'overflow-x-auto',
+              th: 'bg-warning text-white text-center',
+              td: 'text-center p-3 sm:p-1'
+            }" />
           </section>
 
           <div class="border-t-2 border-dashed border-primary/20 my-8" />
@@ -320,7 +350,8 @@ const arabicTerms = [
           <section>
             <div class="mb-6 p-4 bg-success/5 rounded-lg">
               <h2 class="text-2xl font-bold mb-3 flex items-center gap-2">
-                <span class="flex items-center justify-center w-8 h-8 bg-success text-white rounded-full text-lg">4</span>
+                <span
+                  class="flex items-center justify-center w-8 h-8 bg-success text-white rounded-full text-lg">4</span>
                 Kata Benda Bahasa Arab
               </h2>
               <p class="text-sm text-muted">
@@ -334,30 +365,11 @@ const arabicTerms = [
                 <UIcon name="i-lucide-user" class="size-5" />
                 Contoh Nama Orang
               </h3>
-              <div class="overflow-x-auto">
-                <table class="w-full border-collapse">
-                  <thead>
-                    <tr class="bg-success text-white">
-                      <th class="border border-success/20 p-3 text-center font-bold">Bahasa Arab</th>
-                      <th class="border border-success/20 p-3 text-center font-bold">Pegon</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="(item, index) in arabicNames"
-                      :key="index"
-                      :class="index % 2 === 0 ? 'bg-success/5' : 'bg-default'"
-                    >
-                      <td class="border border-success/20 p-4 text-center">
-                        <span class="text-2xl font-arabic" dir="rtl">{{ item.arabic }}</span>
-                      </td>
-                      <td class="border border-success/20 p-4 text-center">
-                        <span class="text-2xl font-arabic" dir="rtl">{{ item.pegon }}</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <UTable :data="arabicNames" :columns="arabicNamesColumns" :ui="{
+                root: 'overflow-x-auto',
+                th: 'bg-success text-white text-center',
+                td: 'text-center p-3 md:p-4'
+              }" />
             </div>
 
             <!-- Places Section -->
@@ -366,30 +378,11 @@ const arabicTerms = [
                 <UIcon name="i-lucide-map-pin" class="size-5" />
                 Contoh Nama Tempat
               </h3>
-              <div class="overflow-x-auto">
-                <table class="w-full border-collapse">
-                  <thead>
-                    <tr class="bg-success text-white">
-                      <th class="border border-success/20 p-3 text-center font-bold">Bahasa Arab</th>
-                      <th class="border border-success/20 p-3 text-center font-bold">Pegon</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="(item, index) in arabicPlaces"
-                      :key="index"
-                      :class="index % 2 === 0 ? 'bg-success/5' : 'bg-default'"
-                    >
-                      <td class="border border-success/20 p-4 text-center">
-                        <span class="text-2xl font-arabic" dir="rtl">{{ item.arabic }}</span>
-                      </td>
-                      <td class="border border-success/20 p-4 text-center">
-                        <span class="text-2xl font-arabic" dir="rtl">{{ item.pegon }}</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <UTable :data="arabicPlaces" :columns="arabicPlacesColumns" :ui="{
+                root: 'overflow-x-auto',
+                th: 'bg-success text-white text-center',
+                td: 'text-center p-3 md:p-4'
+              }" />
             </div>
 
             <!-- Terms Section -->
@@ -398,30 +391,11 @@ const arabicTerms = [
                 <UIcon name="i-lucide-book-open-text" class="size-5" />
                 Contoh Istilah Khusus
               </h3>
-              <div class="overflow-x-auto">
-                <table class="w-full border-collapse">
-                  <thead>
-                    <tr class="bg-success text-white">
-                      <th class="border border-success/20 p-3 text-center font-bold">Bahasa Arab</th>
-                      <th class="border border-success/20 p-3 text-center font-bold">Pegon</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="(item, index) in arabicTerms"
-                      :key="index"
-                      :class="index % 2 === 0 ? 'bg-success/5' : 'bg-default'"
-                    >
-                      <td class="border border-success/20 p-4 text-center">
-                        <span class="text-2xl font-arabic" dir="rtl">{{ item.arabic }}</span>
-                      </td>
-                      <td class="border border-success/20 p-4 text-center">
-                        <span class="text-2xl font-arabic" dir="rtl">{{ item.pegon }}</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <UTable :data="arabicTerms" :columns="arabicTermsColumns" :ui="{
+                root: 'overflow-x-auto',
+                th: 'bg-success text-white text-center',
+                td: 'text-center p-3 md:p-4'
+              }" />
             </div>
           </section>
 
@@ -432,7 +406,8 @@ const arabicTerms = [
               💡 Tips Penting
             </h3>
             <ul class="list-disc pl-6 space-y-2 text-sm">
-              <li><strong>Vokal:</strong> Perhatikan posisi huruf vokal (awal, tengah, akhir) karena di beberapa kata bentuknya bisa berbeda</li>
+              <li><strong>Vokal:</strong> Perhatikan posisi huruf vokal (awal, tengah, akhir) karena di beberapa kata
+                bentuknya bisa berbeda</li>
               <li><strong>Gabungan Khusus:</strong> NG, NY, SY memiliki huruf tersendiri dalam Pegon</li>
               <li><strong>Kata Arab:</strong> Kata benda dari bahasa Arab ditulis menyesuaikan tulisan aslinya</li>
             </ul>
@@ -440,7 +415,6 @@ const arabicTerms = [
 
           <!-- Footer -->
           <div class="mt-8 pt-6 border-t-2 border-primary/20 text-center text-xs text-muted space-y-1">
-            <p class="font-medium">Panduan ini disusun berdasarkan standar penulisan Pegon yang berlaku</p>
             <p>Terakhir diperbarui: Oktober 2025 | Versi 1.0</p>
           </div>
         </div>
@@ -452,30 +426,15 @@ const arabicTerms = [
         </div>
 
         <!-- Confirmation Checkbox -->
-        <UCheckbox
-          v-if="!hasCompletedOnboarding"
-          v-model="hasConfirmed"
-          :disabled="!hasScrolledToBottom"
-          color="primary"
-          label="✓ Saya telah membaca dan memahami seluruh Panduan Pegon"
-          description="Saya akan menggunakan panduan ini sebagai referensi dalam menulis Pegon dengan benar"
-          required
-        />
+        <UCheckbox v-if="!hasCompletedOnboarding" v-model="hasConfirmed" :disabled="!hasScrolledToBottom"
+          color="primary" label="✓ Saya telah membaca dan memahami seluruh Panduan Pegon"
+          description="Saya akan menggunakan panduan ini sebagai referensi dalam menulis Pegon dengan benar" required />
 
         <!-- Complete Button -->
-
-        <UButton v-if="hasCompletedOnboarding" icon="lucide:home" label="Kembali ke Home" color="primary" size="xl" to="/">
-
-        </UButton>
-        <UButton
-          v-else
-          :disabled="!hasScrolledToBottom || !hasConfirmed"
-          color="primary"
-          size="xl"
-          block
-          icon="i-lucide-check-circle"
-          @click="completeOnboarding"
-        >
+        <UButton v-if="hasCompletedOnboarding" icon="lucide:home" label="Kembali ke Home" color="primary" size="xl"
+          to="/" />
+        <UButton v-else :disabled="!hasScrolledToBottom || !hasConfirmed" color="primary" size="xl" block
+          icon="i-lucide-check-circle" @click="completeOnboarding">
           <span class="font-bold">Saya Siap - Lanjutkan ke Aplikasi</span>
         </UButton>
       </div>
@@ -484,13 +443,6 @@ const arabicTerms = [
 </template>
 
 <style scoped>
-/* Arabic font support */
-.font-arabic {
-  font-family: 'Scheherazade New', 'Amiri', 'Traditional Arabic', 'Arial Unicode MS', sans-serif;
-  font-size: 1.25em;
-  line-height: 2;
-}
-
 /* RTL support */
 [dir="rtl"] {
   direction: rtl;

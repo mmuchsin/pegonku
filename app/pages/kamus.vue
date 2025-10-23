@@ -2,6 +2,8 @@
 import { h, resolveComponent } from 'vue'
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import type { TableColumn } from '@nuxt/ui'
+import type { Table } from '@tanstack/vue-table'
+
 
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
@@ -16,13 +18,11 @@ type Dictionary = {
 
 const dictionary = useDictionary()
 
-// ✨ Add search state
+// Search state
 const globalFilter = ref('')
-
-// ✨ Use boolean for switch
 const isExactMode = ref(false)
 
-// ✨ Compute the search mode from the boolean
+// Compute the search mode from the boolean
 const searchMode = computed(() => isExactMode.value ? 'exact' : 'contain')
 
 // Use the composable with reactive search and mode
@@ -33,10 +33,9 @@ function clearSearch() {
 }
 
 const toast = useToast()
+const table = useTemplateRef<{ tableApi: Table<Dictionary> }>('table')
 
-const table = useTemplateRef('table')
-
-// ✨ Add computed values for pagination
+// Computed values for pagination
 const paginationInfo = computed(() => {
   if (!table.value?.tableApi) {
     return {
@@ -137,7 +136,8 @@ const columns: TableColumn<Dictionary>[] = [{
       icon: 'lucide:ellipsis-vertical',
       color: 'neutral',
       variant: 'ghost',
-      size: 'sm'
+      size: 'sm',
+      'aria-label': 'Actions menu'
     })))
   }
 }]
@@ -191,8 +191,21 @@ async function saveEdit() {
 
     isEditModalOpen.value = false
     await refresh()
+
+    toast.add({
+      title: 'Berhasil',
+      description: 'Data berhasil diperbarui',
+      color: 'success',
+      icon: 'lucide:check-circle'
+    })
   } catch (error: any) {
     console.error('Update failed:', error)
+    toast.add({
+      title: 'Gagal',
+      description: error.message || 'Gagal memperbarui data',
+      color: 'error',
+      icon: 'lucide:alert-circle'
+    })
   } finally {
     isUpdating.value = false
   }
@@ -211,13 +224,27 @@ async function handleDelete() {
 
   try {
     await dictionary.remove(deletingId.value)
-    
+
     isDeleteModalOpen.value = false
     await refresh()
+
+    toast.add({
+      title: 'Berhasil',
+      description: 'Data berhasil dihapus',
+      color: 'success',
+      icon: 'lucide:check-circle'
+    })
   } catch (error: any) {
     console.error('Delete failed:', error)
+    toast.add({
+      title: 'Gagal',
+      description: error.message || 'Gagal menghapus data',
+      color: 'error',
+      icon: 'lucide:alert-circle'
+    })
   } finally {
     isDeleting.value = false
+    deletingId.value = null
   }
 }
 
@@ -228,125 +255,122 @@ function cancelDelete() {
 </script>
 
 <template>
-  <UContainer class="max-w-2xl min-h-screen p-4">
-    <div class="min-h-9/10">
+  <UContainer class="max-w-2xl min-h-screen px-3 sm:px-4 py-4 sm:py-6 pb-24 sm:pb-32">
+    <div class="space-y-4 sm:space-y-6">
       <!-- Header -->
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h1 class="text-2xl font-bold">Kamus Pegon</h1>
-          <p class="text-sm text-muted">Daftar kamus Latin ke Pegon</p>
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div class="flex-1 min-w-0">
+          <h1 class="text-xl sm:text-2xl font-bold truncate">Kamus Pegon</h1>
+          <p class="text-xs sm:text-sm text-muted truncate">Daftar kamus Latin ke Pegon</p>
         </div>
 
-        <UButton icon="lucide:home" label="Home" color="primary" size="sm" to="/" />
+        <!-- Home button: with label on desktop, icon only on mobile -->
+        <UButton icon="lucide:home" label="Home" color="primary" size="sm" to="/"
+          class="shrink-0 hidden sm:inline-flex" />
+        <UButton icon="lucide:home" color="primary" size="sm" to="/" square class="shrink-0 sm:hidden"
+          aria-label="Home" />
       </div>
 
       <!-- Search bar with clear button and mode switch -->
-      <div class="flex gap-3 mb-4 items-center">
-        <!-- ✨ Search input with trailing clear button -->
-        <UInput 
-          v-model="globalFilter" 
-          placeholder="Cari teks Indonesia atau Pegon..." 
-          icon="lucide:search"
-          class="flex-1"
-        >
+      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <!-- Search input -->
+        <UInput v-model="globalFilter" placeholder="Cari teks Indonesia atau Pegon..." icon="lucide:search"
+          class="flex-1">
           <template #trailing>
-            <UButton
-              v-show="globalFilter"
-              color="neutral"
-              variant="link"
-              icon="lucide:x"
-              :padded="false"
-              @click="clearSearch"
-            />
+            <UButton v-if="globalFilter" color="neutral" variant="link" icon="lucide:x" size="xs" @click="clearSearch"
+              aria-label="Clear search" class="-m-1" />
           </template>
         </UInput>
-        
-        <!-- ✨ Search mode switch -->
-        <div class="flex items-center gap-2">
-          <USwitch 
-            id="mode-switch" 
-            v-model="isExactMode" 
-            :true-value="true" 
-            :false-value="false"
-            label="Presisi"
-          />
+
+        <!-- Search mode switch -->
+        <div
+          class="flex items-center gap-2 justify-between sm:justify-start bg-elevated/50 sm:bg-transparent px-3 py-2 sm:p-0 rounded-md sm:rounded-none -mx-1 sm:mx-0">
+          <span class="text-xs sm:text-sm text-muted sm:hidden">Pencarian Presisi</span>
+          <USwitch id="mode-switch" v-model="isExactMode" label="Presisi" :ui="{ wrapper: 'hidden sm:block' }" />
         </div>
       </div>
+
 
       <!-- Table -->
-      <div class="border border-default rounded-lg overflow-hidden">
-        <UTable 
-          ref="table" 
-          :key="`${pagination.pageIndex}-${pagination.pageSize}`" 
-          v-model:sorting="sorting"
-          v-model:pagination="pagination" 
-          :data="apiData || []" 
-          :columns="columns"
-          :loading="status === 'pending'" 
+      <div class="border border-default rounded-md sm:rounded-lg overflow-x-auto -mx-3 sm:mx-0">
+        <UTable ref="table" :key="`${pagination.pageIndex}-${pagination.pageSize}`" v-model:sorting="sorting"
+          v-model:pagination="pagination" :data="apiData || []" :columns="columns" :loading="status === 'pending'"
           :pagination-options="{
             getPaginationRowModel: getPaginationRowModel()
-          }" 
-        />
+          }" :ui="{
+            root: 'min-w-full',
+            td: 'px-2 sm:px-4 py-2 sm:py-4 text-xs sm:text-sm whitespace-nowrap',
+            th: 'px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm'
+          }" />
       </div>
 
-      <!-- ✨ Cleaner Pagination Footer -->
-      <div v-if="apiData && table?.tableApi" class="flex items-center justify-between mt-4">
-        <div class="text-sm text-muted">
-          Menampilkan {{ paginationInfo.start }}-{{ paginationInfo.end }} dari {{ paginationInfo.total }}
+      <!-- Pagination Footer -->
+      <div v-if="apiData && table?.tableApi" class="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="text-xs sm:text-sm text-muted order-2 sm:order-1">
+          <span class="hidden sm:inline">Menampilkan </span>
+          {{ paginationInfo.start }}-{{ paginationInfo.end }} dari {{ paginationInfo.total }}
         </div>
 
-        <UPagination 
-          show-edges 
-          :default-page="paginationInfo.currentPage"
-          :items-per-page="paginationInfo.pageSize"
-          :total="paginationInfo.total"
-          @update:page="(p: number) => table!.tableApi!.setPageIndex(p - 1)" 
-        />
+        <UPagination show-edges :default-page="paginationInfo.currentPage" :items-per-page="paginationInfo.pageSize"
+          :total="paginationInfo.total" :sibling-count="1" size="sm"
+          @update:page="(p: number) => table!.tableApi!.setPageIndex(p - 1)" class="order-1 sm:order-2" />
       </div>
     </div>
 
     <!-- Edit Modal -->
-    <UModal v-model:open="isEditModalOpen" title="Edit Entri Kamus" description="Ubah teks Indonesia atau Pegon"
-      :ui="{ footer: 'justify-end' }">
+    <UModal v-model:open="isEditModalOpen" title="Edit Entri Kamus" description="Ubah teks Indonesia atau Pegon" :ui="{
+      footer: 'flex gap-2 justify-end',
+      content: 'sm:max-w-lg'
+    }">
       <template #body>
-        <div class="space-y-4">
+        <div class="space-y-3 sm:space-y-4">
           <div>
-            <label class="block text-sm font-medium mb-1">Teks Indonesia</label>
-            <UInput v-model="editForm.teks_ind" placeholder="Masukkan teks Indonesia" :disabled="isUpdating" />
+            <label for="edit-teks-ind" class="block text-xs sm:text-sm font-medium mb-1.5">
+              Teks Indonesia
+            </label>
+            <UInput id="edit-teks-ind" v-model="editForm.teks_ind" placeholder="Masukkan teks Indonesia"
+              :disabled="isUpdating" />
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-1">Pegon</label>
-            <UInput v-model="editForm.pegon" placeholder="Masukkan teks Pegon" class="font-pegon text-right text-lg"
-              :disabled="isUpdating" />
+            <label for="edit-pegon" class="block text-xs sm:text-sm font-medium mb-1.5">
+              Pegon
+            </label>
+            <UInput id="edit-pegon" v-model="editForm.pegon" placeholder="Masukkan teks Pegon"
+              class="font-pegon text-right text-base sm:text-lg" :disabled="isUpdating" />
           </div>
         </div>
       </template>
 
       <template #footer>
-        <UButton label="Batal" color="neutral" variant="outline" :disabled="isUpdating"
-          @click="isEditModalOpen = false" />
-        <UButton label="Simpan" icon="lucide:save" :loading="isUpdating" @click="saveEdit" />
+        <UButton label="Batal" color="neutral" variant="outline" :disabled="isUpdating" @click="isEditModalOpen = false"
+          class="flex-1 sm:flex-initial" />
+        <UButton label="Simpan" icon="lucide:save" :loading="isUpdating" @click="saveEdit"
+          class="flex-1 sm:flex-initial" />
       </template>
     </UModal>
 
     <!-- Delete Confirmation Modal -->
     <UModal v-model:open="isDeleteModalOpen" title="Konfirmasi Hapus"
-      description="Apakah Anda yakin ingin menghapus entri ini? Tindakan ini tidak dapat dibatalkan."
-      :ui="{ footer: 'justify-end' }">
+      description="Apakah Anda yakin ingin menghapus entri ini? Tindakan ini tidak dapat dibatalkan." :ui="{
+        footer: 'flex gap-2 justify-end',
+        content: 'sm:max-w-lg'
+      }">
       <template #body>
-        <div class="flex items-center gap-3 p-4 bg-error/10 rounded-lg border border-error/20">
-          <UIcon name="lucide:alert-triangle" class="size-5 text-error" />
-          <div class="text-sm">
-            <p class="font-medium text-error">Peringatan!</p>
+        <div class="flex items-start sm:items-center gap-3 p-3 sm:p-4 bg-error/10 rounded-lg border border-error/20">
+          <UIcon name="lucide:alert-triangle" class="size-5 sm:size-6 text-error shrink-0 mt-0.5 sm:mt-0" />
+          <div class="text-xs sm:text-sm">
+            <p class="font-medium text-error mb-0.5">Peringatan!</p>
             <p class="text-muted">Data yang dihapus tidak dapat dikembalikan.</p>
           </div>
         </div>
       </template>
 
       <template #footer>
-        <UButton label="Batal" color="neutral" variant="outline" :disabled="isDeleting" @click="cancelDelete" />
-        <UButton label="Hapus" icon="lucide:trash" color="error" :loading="isDeleting" @click="handleDelete" />
+        <UButton label="Batal" color="neutral" variant="outline" :disabled="isDeleting" @click="cancelDelete"
+          class="flex-1 sm:flex-initial" />
+        <UButton label="Hapus" icon="lucide:trash" color="error" :loading="isDeleting" @click="handleDelete"
+          class="flex-1 sm:flex-initial" />
       </template>
     </UModal>
   </UContainer>

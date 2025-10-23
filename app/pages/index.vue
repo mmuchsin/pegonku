@@ -64,30 +64,30 @@ function clearAll() {
 // Function to copy the Pegon result with visual feedback
 async function copyPegonResult() {
   if (!pegonResult.value) {
-    toast.add({ 
-      title: 'Tidak ada teks untuk disalin.', 
-      color: 'warning', 
-      icon: 'lucide:alert-circle' 
+    toast.add({
+      title: 'Tidak ada teks untuk disalin.',
+      color: 'warning',
+      icon: 'lucide:alert-circle'
     });
     return;
   }
   try {
     await navigator.clipboard.writeText(pegonResult.value);
     copied.value = true;
-    toast.add({ 
-      title: 'Teks Pegon disalin!', 
-      icon: 'lucide:circle-check' 
+    toast.add({
+      title: 'Teks Pegon disalin!',
+      icon: 'lucide:circle-check'
     });
     setTimeout(() => {
       copied.value = false;
     }, 2000);
   } catch (err) {
     console.error('Gagal menyalin teks: ', err);
-    toast.add({ 
-      title: 'Gagal menyalin teks.', 
-      description: 'Silakan coba salin manual.', 
-      color: 'error', 
-      icon: 'lucide:alert-circle' 
+    toast.add({
+      title: 'Gagal menyalin teks.',
+      description: 'Silakan coba salin manual.',
+      color: 'error',
+      icon: 'lucide:alert-circle'
     });
   }
 }
@@ -95,24 +95,24 @@ async function copyPegonResult() {
 // Function to save a new word to the dictionary
 async function saveToDictionary() {
   if (!newWord.value.teks_ind || !newWord.value.pegon) {
-    toast.add({ 
-      title: 'Kolom tidak boleh kosong.', 
-      description: 'Teks Indonesia dan Pegon harus diisi.', 
-      color: 'warning' 
+    toast.add({
+      title: 'Kolom tidak boleh kosong.',
+      description: 'Teks Indonesia dan Pegon harus diisi.',
+      color: 'warning'
     });
     return;
   }
-  
+
   try {
     // Use the composable method instead
     await dictionary.create(newWord.value);
-    
+
     isModalOpen.value = false;
     newWord.value = { teks_ind: '', pegon: '' };
-    
+
     // Refresh the useFetch data
     await refresh();
-    
+
     // Toast is handled by the composable
   } catch (error) {
     // Error toast is already handled by the composable
@@ -133,12 +133,26 @@ const isDark = computed({
 });
 
 const showWarning = ref(true);
+
+const { hasReadGuide } = useGuideStatus()
+const hasCompletedOnboarding = ref(false)
+
+
+// Check localStorage only on client after hydration
+onMounted(() => {
+  hasCompletedOnboarding.value = hasReadGuide()
+  
+  // If already completed, redirect immediately
+  if (hasCompletedOnboarding.value) {
+    navigateTo('/')
+  }
+})
 </script>
 
 
 
 <template>
-  <UContainer class="py-10 pb-32 max-w-2xl min-h-screen">
+  <UContainer class="py-6 sm:py-10 pb-20 sm:pb-24 max-w-2xl min-h-screen">
     <header class="text-center my-6 md:my-10">
       <h1 class="text-3xl md:text-4xl font-bold text-primary-600 dark:text-primary-400">Indonesia → Pegon</h1>
       <p class="text-gray-500 dark:text-gray-400 mt-2">Alat bantu transliterasi dengan kamus kustom.</p>
@@ -175,60 +189,53 @@ const showWarning = ref(true);
         </div>
       </div>
     </UCard>
+
+    <footer
+      class="fixed bottom-0 left-0 right-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 pb-safe">
+      <nav class="flex justify-around items-center max-w-xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+        <UButton to="/" icon="lucide:home" size="xl" variant="ghost" color="neutral" class="flex-1 justify-center">
+        </UButton>
+
+        <UButton to="/panduan" icon="lucide:book-open" size="xl" variant="ghost" color="neutral"
+          class="flex-1 justify-center">
+        </UButton>
+
+        <UButton to="/kamus" icon="lucide:book" size="xl" variant="ghost" color="neutral" class="flex-1 justify-center">
+        </UButton>
+
+        <UModal v-model:open="isModalOpen" title="Tambah Kamus">
+          <!-- Trigger button goes in default slot -->
+          <UButton icon="lucide:square-plus" size="xl" color="neutral" variant="ghost"
+            class="flex-1 justify-center text-xs min-h-[44px]" />
+
+          <!-- Modal content goes in #body slot -->
+          <template #body>
+            <UForm class="space-y-4" @submit="saveToDictionary">
+              <UFormField label="Teks Indonesia" name="teks_ind">
+                <UInput v-model="newWord.teks_ind" class="w-full" :ui="{ base: 'text-left text-2xl' }" />
+              </UFormField>
+
+              <UFormField label="Teks Pegon" name="pegon">
+                <UInput v-model="newWord.pegon" class="w-full" :ui="{ base: 'text-right font-pegon text-2xl' }"
+                  dir="rtl" />
+              </UFormField>
+
+
+              <div class="flex justify-end gap-2">
+                <UButton label="Cancel" color="neutral" variant="outline" @click="isModalOpen = false" size="lg" />
+                <UButton type="submit" label="Save" size="lg" />
+              </div>
+
+            </UForm>
+          </template>
+        </UModal>
+
+        <UColorModeButton size="xl" :ui="{base: 'flex-1 justify-center'}"/>
+      </nav>
+    </footer>
+
   </UContainer>
 
-  <footer
-    class="fixed bottom-0 left-0 right-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800">
-    <nav class="flex justify-around max-w-xl mx-auto">
-      <UButton to="/" icon="lucide:home" size="xl" variant="ghost" color="neutral" class="flex-1 justify-center">
-      </UButton>
-
-      <UButton to="/panduan" icon="lucide:book-open" size="xl" variant="ghost" color="neutral"
-        class="flex-1 justify-center">
-      </UButton>
-
-      <UButton to="/kamus" icon="lucide:book" size="xl" variant="ghost" color="neutral"
-        class="flex-1 justify-center">
-      </UButton>
-
-      <UModal v-model:open="isModalOpen" title="Tambah Kamus">
-        <!-- Trigger button goes in default slot -->
-        <UButton icon="lucide:square-plus" size="xl" color="neutral" variant="ghost"
-          class="flex-1 justify-center text-xs" />
-
-        <!-- Modal content goes in #body slot -->
-        <template #body>
-          <UForm class="space-y-4" @submit="saveToDictionary">
-            <UFormField label="Teks Indonesia" name="teks_ind">
-              <UInput v-model="newWord.teks_ind" class="w-full" :ui="{ base: 'text-left text-2xl' }" />
-            </UFormField>
-
-            <UFormField label="Teks Pegon" name="pegon">
-              <UInput v-model="newWord.pegon" class="w-full" :ui="{ base: 'text-right font-pegon text-2xl' }"
-                dir="rtl" />
-            </UFormField>
-
-
-            <div class="flex justify-end gap-2">
-              <UButton label="Cancel" color="neutral" variant="outline" @click="isModalOpen = false" size="lg" />
-              <UButton type="submit" label="Save" size="lg" />
-            </div>
-
-          </UForm>
-        </template>
-      </UModal>
-
-      <ClientOnly v-if="!colorMode?.forced">
-        <UButton :icon="isDark ? 'lucide:moon' : 'lucide:sun'" color="neutral" variant="ghost"
-          :aria-label="`Switch to ${isDark ? 'light' : 'dark'} mode`" @click="isDark = !isDark"
-          class="flex-1 justify-center" />
-
-        <template #fallback>
-          <div class="size-8" />
-        </template>
-      </ClientOnly>
-    </nav>
-  </footer>
 
 </template>
 
