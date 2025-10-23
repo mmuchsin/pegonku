@@ -258,7 +258,7 @@ function cancelDelete() {
   <UContainer class="max-w-2xl min-h-screen px-3 sm:px-4 py-4 sm:py-6 pb-24 sm:pb-32">
     <div class="space-y-4 sm:space-y-6">
       <!-- Header -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+      <div class="flex items-start justify-between gap-3">
         <div class="flex-1 min-w-0">
           <h1 class="text-xl sm:text-2xl font-bold truncate">Kamus Pegon</h1>
           <p class="text-xs sm:text-sm text-muted truncate">Daftar kamus Latin ke Pegon</p>
