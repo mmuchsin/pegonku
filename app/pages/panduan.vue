@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useGuideStatus } from '~/composables/useGuideStatus'
 import type { TableColumn } from '@nuxt/ui'
 
 // Use the composable
@@ -243,7 +242,7 @@ const arabicTermsColumns: TableColumn<typeof arabicTerms[0]>[] = [
     <div class="max-w-7xl mx-auto">
       <!-- Header Alert -->
       <UAlert color="warning" variant="solid" title="📖 Panduan Pegon - Wajib Dibaca"
-        description="Silakan baca panduan lengkap ini dengan seksama sebelum menggunakan aplikasi. Pemahaman yang baik akan membantu Anda menulis Pegon dengan benar."
+        description="Silakan baca panduan lengkap ini dengan seksama sebelum menggunakan aplikasi."
         class="mb-6" />
 
       <!-- Main Content -->
