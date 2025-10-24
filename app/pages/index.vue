@@ -140,7 +140,7 @@ const hasCompletedOnboarding = ref(false)
 // Check localStorage only on client after hydration
 onMounted(() => {
   hasCompletedOnboarding.value = hasReadGuide()
-  
+
   // If already completed, redirect immediately
   if (hasCompletedOnboarding.value) {
     navigateTo('/')
@@ -210,13 +210,13 @@ onMounted(() => {
           <!-- Modal content goes in #body slot -->
           <template #body>
             <UForm class="space-y-4" @submit="saveToDictionary">
-              <UFormField label="Teks Indonesia" name="teks_ind">
-                <UInput v-model="newWord.teks_ind" class="w-full" :ui="{ base: 'text-left text-2xl' }" />
+              <UFormField label="Teks Indonesia" name="teks_ind" required
+                description="Masukkan kata atau frasa dalam bahasa Indonesia">
+                <UInput v-model="newWord.teks_ind" />
               </UFormField>
 
-              <UFormField label="Teks Pegon" name="pegon">
-                <UInput v-model="newWord.pegon" class="w-full" :ui="{ base: 'text-right font-pegon text-2xl' }"
-                  dir="rtl" />
+              <UFormField label="Teks Pegon" name="pegon" required hint="RTL">
+                <UInput v-model="newWord.pegon" dir="rtl" />
               </UFormField>
 
 
@@ -229,7 +229,7 @@ onMounted(() => {
           </template>
         </UModal>
 
-        <UColorModeButton size="xl" :ui="{base: 'flex-1 justify-center'}"/>
+        <UColorModeButton size="xl" :ui="{ base: 'flex-1 justify-center' }" />
       </nav>
     </footer>
 
