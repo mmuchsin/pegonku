@@ -1,18 +1,13 @@
 // composables/useGuideStatus.ts
 export const useGuideStatus = () => {
-  const hasReadGuide = () => {
-    if (process.client) {
-      return localStorage.getItem('hasReadGuide') === 'true'
-    }
-    return false
-  }
-
+  const hasReadGuide = useCookie('hasReadGuide', { 
+    default: () => false 
+  })
+  
   const markGuideAsRead = () => {
-    if (process.client) {
-      localStorage.setItem('hasReadGuide', 'true')
-    }
+    hasReadGuide.value = true
   }
-
+  
   return {
     hasReadGuide,
     markGuideAsRead

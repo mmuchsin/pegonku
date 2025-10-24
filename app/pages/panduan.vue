@@ -5,14 +5,14 @@ import type { TableColumn } from '@nuxt/ui'
 // Use the composable
 const { hasReadGuide, markGuideAsRead } = useGuideStatus()
 
-// Initialize state - always false on server
-const hasCompletedOnboarding = ref(false)
+// Initialize state from the cookie (SSR-friendly)
+const hasCompletedOnboarding = ref(hasReadGuide.value)
 const hasScrolledToBottom = ref(false)
 const hasConfirmed = ref(false)
 
-// Check localStorage only on client after hydration
-onMounted(() => {
-  hasCompletedOnboarding.value = hasReadGuide()
+// Watch for changes in the cookie (optional, if you want to react to changes elsewhere)
+watch(hasReadGuide, (newVal) => {
+  hasCompletedOnboarding.value = newVal
 })
 
 // Handle scroll detection
@@ -29,7 +29,7 @@ function handleScroll(event: Event) {
 function completeOnboarding() {
   if (hasConfirmed.value && hasScrolledToBottom.value) {
     hasCompletedOnboarding.value = true
-    markGuideAsRead()
+    markGuideAsRead() // This sets the cookie
 
     nextTick(() => {
       navigateTo('/')

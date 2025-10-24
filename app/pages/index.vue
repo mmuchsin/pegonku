@@ -2,6 +2,11 @@
 import { ref, watch, nextTick } from 'vue';
 import { transliterateParagraph } from '../utils/logic';
 
+definePageMeta({
+  middleware: 'guide-check'
+})
+
+
 // Define types
 type DictionaryEntry = {
   id?: number;
@@ -134,19 +139,6 @@ const isDark = computed({
 
 const showWarning = ref(true);
 
-const { hasReadGuide } = useGuideStatus()
-const hasCompletedOnboarding = ref(false)
-
-
-// Check localStorage only on client after hydration
-onMounted(() => {
-  hasCompletedOnboarding.value = hasReadGuide()
-
-  // If already completed, redirect immediately
-  if (hasCompletedOnboarding.value) {
-    navigateTo('/')
-  }
-})
 </script>
 
 
