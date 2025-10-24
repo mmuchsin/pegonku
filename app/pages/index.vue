@@ -160,7 +160,7 @@ onMounted(() => {
 
     <UCard>
       <div class="space-y-4 min-h-2/3">
-        <UTextarea class="w-full" v-model="inputText" :rows="6" placeholder="Tulis teks Indonesia di sini..."
+        <UTextarea name="text_ind" class="w-full" v-model="inputText" :rows="6" placeholder="Tulis teks Indonesia di sini..."
           autoresize />
 
         <div class="flex justify-center">
@@ -211,13 +211,13 @@ onMounted(() => {
           <!-- Modal content goes in #body slot -->
           <template #body>
             <UForm class="space-y-4" @submit="saveToDictionary">
-              <UFormField label="Teks Indonesia" name="teks_ind" required
-                description="Masukkan kata atau frasa dalam bahasa Indonesia">
-                <UInput v-model="newWord.teks_ind" />
+              <UFormField label="Teks Indonesia" name="teks_ind">
+                <UInput v-model="newWord.teks_ind" class="w-full text-left text-2xl sm:text-lg" />
               </UFormField>
 
-              <UFormField label="Teks Pegon" name="pegon" required hint="RTL">
-                <UInput v-model="newWord.pegon" dir="rtl" />
+              <UFormField label="Teks Pegon" name="pegon">
+                <UInput v-model="newWord.pegon" class="w-full font-pegon text-2xl sm:text-lg text-right"
+                  dir="rtl" />
               </UFormField>
 
 
@@ -230,7 +230,7 @@ onMounted(() => {
           </template>
         </UModal>
 
-        <UColorModeButton size="xl" :ui="{ base: 'flex-1 justify-center' }" />
+        <UColorModeButton size="xl" class="flex-1 justify-center" />
       </nav>
     </footer>
 
@@ -240,9 +240,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-[dir="rtl"] {
-  font-family: 'Scheherazade New', serif;
-}
 
 html {
   scroll-behavior: smooth;
