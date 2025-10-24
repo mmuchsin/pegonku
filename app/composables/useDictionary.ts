@@ -37,15 +37,28 @@ export const useDictionary = () => {
 
         return result
       } catch (error: any) {
-        toast.add({
-          title: 'Gagal',
-          description: error.data?.message || 'Gagal menambahkan entri',
-          color: 'error',
-          icon: 'lucide:circle-x'
-        })
+        const statusCode = error.statusCode || error.response?.status
+        
+        // ✅ Handle duplicate entry
+        if (statusCode === 409) {
+          toast.add({
+            title: 'Kata Sudah Ada',
+            description: 'Kata ini sudah ada dalam kamus',
+            color: 'warning',
+            icon: 'lucide:alert-triangle'
+          })
+        } else {
+          toast.add({
+            title: 'Gagal',
+            description: error.data?.message || 'Gagal menambahkan entri',
+            color: 'error',
+            icon: 'lucide:circle-x'
+          })
+        }
         throw error
       }
-    },
+    }
+    ,
 
     update: async (id: number, data: { teks_ind: string; pegon: string }) => {
       try {

@@ -328,7 +328,7 @@ function cancelDelete() {
             <label for="edit-teks-ind" class="block text-xs sm:text-sm font-medium mb-1.5">
               Teks Indonesia
             </label>
-            <UInput id="edit-teks-ind" v-model="editForm.teks_ind" placeholder="Masukkan teks Indonesia"
+            <UInput id="edit-teks-ind" class="w-full" v-model="editForm.teks_ind" placeholder="Masukkan teks Indonesia"
               :disabled="isUpdating" />
           </div>
 
@@ -337,7 +337,7 @@ function cancelDelete() {
               Pegon
             </label>
             <UInput id="edit-pegon" v-model="editForm.pegon" placeholder="Masukkan teks Pegon"
-              class="font-pegon text-right text-base sm:text-lg" :disabled="isUpdating" />
+              class="w-full font-pegon text-right text-base sm:text-lg" :disabled="isUpdating" />
           </div>
         </div>
       </template>
