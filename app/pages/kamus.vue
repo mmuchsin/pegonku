@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { h, resolveComponent } from 'vue'
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import type { TableColumn } from '@nuxt/ui'
 import type { Table } from '@tanstack/vue-table'
@@ -292,13 +293,6 @@ function cancelDelete() {
 
       <!-- Table -->
       <div class="border border-default rounded-md sm:rounded-lg overflow-x-auto -mx-3 sm:mx-0">
-
-        <!-- Loading skeleton -->
-        <div v-if="status === 'pending' && !apiData" class="p-4 space-y-3">
-          <USkeleton class="h-10 w-full" />
-          <USkeleton class="h-8 w-full" v-for="i in 10" :key="i" />
-        </div>
-        
         <UTable ref="table" :key="`${pagination.pageIndex}-${pagination.pageSize}`" v-model:sorting="sorting"
           v-model:pagination="pagination" :data="apiData || []" :columns="columns" :loading="status === 'pending'"
           :pagination-options="{

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { transliterateParagraph } from '~/utils/logic';
+import { ref, watch, nextTick } from 'vue';
+import { transliterateParagraph } from '../utils/logic';
 
 // Define types
 type DictionaryEntry = {
