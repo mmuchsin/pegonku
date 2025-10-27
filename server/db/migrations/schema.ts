@@ -1,6 +1,4 @@
 import { pgTable, unique, serial, text, timestamp, integer } from "drizzle-orm/pg-core"
-import { sql } from "drizzle-orm"
-
 
 
 export const customDictionary = pgTable("custom_dictionary", {
