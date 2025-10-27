@@ -1,5 +1,5 @@
 import { db } from '../../db'
-import { dev_custom_dictionary } from '../../db/schema'
+import { custom_dictionary } from '../../db/schema'
 import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -18,13 +18,13 @@ export default defineEventHandler(async (event) => {
   }
 
   const result = await db
-    .update(dev_custom_dictionary)
+    .update(custom_dictionary)
     .set({
       teks_ind: teks_ind.trim(),
       pegon: pegon.trim(),
       updated_at: new Date()
     })
-    .where(eq(dev_custom_dictionary.id, entryId))
+    .where(eq(custom_dictionary.id, entryId))
     .returning()
 
   if (!result?.length) {

@@ -1,5 +1,5 @@
 import { db } from '../../db'
-import { dev_custom_dictionary } from '../../db/schema'
+import { custom_dictionary } from '../../db/schema'
 import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -16,8 +16,8 @@ export default defineEventHandler(async (event) => {
 
     const result = await db
       .select()
-      .from(dev_custom_dictionary)
-      .where(eq(dev_custom_dictionary.id, entryId))
+      .from(custom_dictionary)
+      .where(eq(custom_dictionary.id, entryId))
       .limit(1)
 
     if (!result?.length) {

@@ -1,5 +1,5 @@
 import { db } from '../../db'
-import { dev_custom_dictionary } from '../../db/schema'
+import { custom_dictionary } from '../../db/schema'
 import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -21,8 +21,8 @@ export default defineEventHandler(async (event) => {
     // Check if word already exists
     const existing = await db
       .select()
-      .from(dev_custom_dictionary)
-      .where(eq(dev_custom_dictionary.teks_ind, trimmedTeksInd))
+      .from(custom_dictionary)
+      .where(eq(custom_dictionary.teks_ind, trimmedTeksInd))
       .limit(1)
 
     if (existing.length > 0) {
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const result = await db
-      .insert(dev_custom_dictionary)
+      .insert(custom_dictionary)
       .values({
         teks_ind: trimmedTeksInd,
         pegon: trimmedPegon,
