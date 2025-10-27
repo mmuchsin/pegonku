@@ -1,0 +1,470 @@
+<script setup lang="ts">
+import { useGuideStatus } from '~/composables/useGuideStatus'
+import type { TableColumn } from '@nuxt/ui'
+
+// Use the composable
+const { hasReadGuide, markGuideAsRead } = useGuideStatus()
+
+// Initialize state from the cookie (SSR-friendly)
+const hasCompletedOnboarding = ref(hasReadGuide.value)
+const hasScrolledToBottom = ref(false)
+const hasConfirmed = ref(false)
+
+// Watch for changes in the cookie (optional, if you want to react to changes elsewhere)
+watch(hasReadGuide, (newVal) => {
+  hasCompletedOnboarding.value = newVal
+})
+
+// Handle scroll detection
+function handleScroll(event: Event) {
+  const element = event.target as HTMLElement
+  const scrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50
+
+  if (scrolledToBottom && !hasScrolledToBottom.value) {
+    hasScrolledToBottom.value = true
+  }
+}
+
+// Complete onboarding
+function completeOnboarding() {
+  if (hasConfirmed.value && hasScrolledToBottom.value) {
+    hasCompletedOnboarding.value = true
+    markGuideAsRead() // This sets the cookie
+
+    nextTick(() => {
+      navigateTo('/')
+    })
+  }
+}
+
+// VOWEL TABLE DATA & COLUMNS
+const vowelData = [
+  {
+    letter: 'A',
+    awal: { arab: 'اَ', example: 'اَفِيْ', latin: 'Api' },
+    tengah: { arab: 'ـَا', example: 'فَاسَارْ', latin: 'Pasar' },
+    akhir: { arab: 'ـَا', example: 'سَامَا', latin: 'Sama' }
+  },
+  {
+    letter: 'I',
+    awal: { arab: 'اِ', example: 'اِتُو', latin: 'Itu' },
+    tengah: { arab: 'ـِي', example: 'تِيْڮَا', latin: 'Tiga' },
+    akhir: { arab: 'ـِي', example: 'سِينِي', latin: 'Sini' }
+  },
+  {
+    letter: 'U',
+    awal: { arab: 'اُ', example: 'اُبِي', latin: 'Ubi' },
+    tengah: { arab: 'ـُو', example: 'كُوكُو', latin: 'Kuku' },
+    akhir: { arab: 'ـُو', example: 'سُوكُو', latin: 'Suku' }
+  },
+  {
+    letter: 'E',
+    awal: { arab: 'آ', example: 'آنَاكْ', latin: 'Enak' },
+    tengah: { arab: 'ـٓ', example: 'بٓكَالْ', latin: 'Bekal' },
+    akhir: { arab: 'ـٓ', example: 'نَاسِي', latin: 'Nasi' }
+  },
+  {
+    letter: 'O',
+    awal: { arab: 'ؤُ', example: 'ؤُرَاعْ', latin: 'Orang' },
+    tengah: { arab: 'ـُو', example: 'تُوفِي', latin: 'Topi' },
+    akhir: { arab: 'ـُو', example: 'جَاڮُو', latin: 'Jago' }
+  }
+]
+
+const vowelColumns: TableColumn<typeof vowelData[0]>[] = [
+  {
+    accessorKey: 'letter',
+    header: 'Huruf',
+    cell: ({ row }) => h('span', { class: 'font-bold text-xl text-primary' }, row.original.letter)
+  },
+  {
+    id: 'awal',
+    header: 'Di Awal',
+    cell: ({ row }) => h('div', { class: 'space-y-2 text-center' }, [
+      h('div', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.awal.arab),
+      h('div', { class: 'text-xl font-pegon', dir: 'rtl' }, row.original.awal.example),
+      h('div', { class: 'text-sm text-muted' }, row.original.awal.latin)
+    ])
+  },
+  {
+    id: 'tengah',
+    header: 'Di Tengah',
+    cell: ({ row }) => h('div', { class: 'space-y-2 text-center' }, [
+      h('div', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.tengah.arab),
+      h('div', { class: 'text-xl font-pegon', dir: 'rtl' }, row.original.tengah.example),
+      h('div', { class: 'text-sm text-muted' }, row.original.tengah.latin)
+    ])
+  },
+  {
+    id: 'akhir',
+    header: 'Di Akhir',
+    cell: ({ row }) => h('div', { class: 'space-y-2 text-center' }, [
+      h('div', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.akhir.arab),
+      h('div', { class: 'text-xl font-pegon', dir: 'rtl' }, row.original.akhir.example),
+      h('div', { class: 'text-sm text-muted' }, row.original.akhir.latin)
+    ])
+  }
+]
+
+// CONSONANT TABLE DATA & COLUMNS
+const consonantData = [
+  { latin: 'B', pegon: 'ب' }, { latin: 'K', pegon: 'ك' }, { latin: 'S', pegon: 'س' },
+  { latin: 'C', pegon: 'چ' }, { latin: 'L', pegon: 'ل' }, { latin: 'T', pegon: 'ت' },
+  { latin: 'D', pegon: 'د' }, { latin: 'M', pegon: 'م' }, { latin: 'V', pegon: 'ف' },
+  { latin: 'F', pegon: 'ف' }, { latin: 'N', pegon: 'ن' }, { latin: 'W', pegon: 'و' },
+  { latin: 'G', pegon: 'ڮ' }, { latin: 'P', pegon: 'ف' }, { latin: 'Y', pegon: 'ي' },
+  { latin: 'H', pegon: 'ه' }, { latin: 'Q', pegon: 'ق' }, { latin: 'Z', pegon: 'ز' },
+  { latin: 'J', pegon: 'ج' }, { latin: 'R', pegon: 'ر' }
+].filter(item => item.latin) // Remove empty entries
+
+const consonantColumns: TableColumn<typeof consonantData[0]>[] = [
+  {
+    accessorKey: 'latin',
+    header: 'Latin',
+    cell: ({ row }) => h('span', { class: 'font-bold text-lg' }, row.original.latin)
+  },
+  {
+    accessorKey: 'pegon',
+    header: 'Pegon',
+    cell: ({ row }) => h('span', { class: 'text-3xl font-pegon', dir: 'rtl' }, row.original.pegon)
+  }
+]
+
+// Dynamically split consonants into 3 columns
+const consonantColumns3 = computed(() => {
+  const perColumn = Math.ceil(consonantData.length / 3)
+  return [
+    consonantData.slice(0, perColumn),
+    consonantData.slice(perColumn, perColumn * 2),
+    consonantData.slice(perColumn * 2)
+  ]
+})
+
+// SPECIAL COMBINATIONS TABLE DATA & COLUMNS
+const specialCombinations = [
+  { combo: 'NG', pegon: 'ع', example: 'عَاجِي', read: 'Ngaji' },
+  { combo: 'NY', pegon: 'ۑ', example: 'ۑَامُوكْ', read: 'Nyamuk' },
+  { combo: 'SY', pegon: 'ش', example: 'شُوكُورْ', read: 'Syukur' }
+]
+
+const specialColumns: TableColumn<typeof specialCombinations[0]>[] = [
+  {
+    accessorKey: 'combo',
+    header: 'Gabungan',
+    cell: ({ row }) => h('span', { class: 'font-medium text-xl' }, row.original.combo)
+  },
+  {
+    accessorKey: 'pegon',
+    header: 'Huruf Pegon',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.pegon)
+  },
+  {
+    accessorKey: 'example',
+    header: 'Contoh',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, [
+      h('div', { class: 'text-xl font-pegon', dir: 'rtl' }, row.original.example),
+      h('div', { class: 'text-sm text-muted' }, row.original.read)
+    ])
+  }
+]
+
+// ARABIC NAMES TABLE DATA & COLUMNS
+const arabicNames = [
+  { arabic: 'مُحَمَّد', pegon: 'مُحَمَّدْ' },
+  { arabic: 'عَلِيّ', pegon: 'عَلِي' },
+  { arabic: 'فَاطِمَة', pegon: 'فَاطِمَةْ' },
+  { arabic: 'خَالِد', pegon: 'خَالِدْ' },
+  { arabic: 'عَبْدُ الله', pegon: 'عَبْدُ اللهْ' },
+  { arabic: 'يُوسُف', pegon: 'يُوسُفْ' }
+]
+
+const arabicNamesColumns: TableColumn<typeof arabicNames[0]>[] = [
+  {
+    accessorKey: 'arabic',
+    header: 'Bahasa Arab',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.arabic)
+  },
+  {
+    accessorKey: 'pegon',
+    header: 'Pegon',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.pegon)
+  }
+]
+
+// ARABIC PLACES TABLE DATA & COLUMNS
+const arabicPlaces = [
+  { arabic: 'مَكَّة', pegon: 'مَكَّةْ' },
+  { arabic: 'مَدِينَة', pegon: 'مَدِينَةْ' },
+  { arabic: 'بَغْدَاد', pegon: 'بَغْدَادْ' },
+  { arabic: 'شَام', pegon: 'شَامْ' }
+]
+
+const arabicPlacesColumns: TableColumn<typeof arabicPlaces[0]>[] = [
+  {
+    accessorKey: 'arabic',
+    header: 'Bahasa Arab',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.arabic)
+  },
+  {
+    accessorKey: 'pegon',
+    header: 'Pegon',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.pegon)
+  }
+]
+
+// ARABIC TERMS TABLE DATA & COLUMNS
+const arabicTerms = [
+  { arabic: 'إِسْلَام', pegon: 'إِسْلَامْ' },
+  { arabic: 'قُرْآن', pegon: 'قُرْآنْ' },
+  { arabic: 'سُنَّة', pegon: 'سُنَّةْ' },
+  { arabic: 'حَدِيث', pegon: 'حَدِيثْ' },
+  { arabic: 'فِقْه', pegon: 'فِقِهْ' },
+  { arabic: 'تَوْحِيد', pegon: 'تَوْحِيدْ' },
+  { arabic: 'شَرِيعَة', pegon: 'شَرِيعَةْ' }
+]
+
+const arabicTermsColumns: TableColumn<typeof arabicTerms[0]>[] = [
+  {
+    accessorKey: 'arabic',
+    header: 'Bahasa Arab',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.arabic)
+  },
+  {
+    accessorKey: 'pegon',
+    header: 'Pegon',
+    cell: ({ row }) => h('span', { class: 'text-2xl font-pegon', dir: 'rtl' }, row.original.pegon)
+  }
+]
+</script>
+
+<template>
+  <!-- ONBOARDING SCREEN -->
+  <div class="min-h-screen bg-elevated p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+      <!-- Header Alert -->
+      <UAlert color="warning" variant="solid" title="📖 Panduan Pegon - Wajib Dibaca"
+        description="Silakan baca panduan lengkap ini dengan seksama sebelum menggunakan aplikasi. Pemahaman yang baik akan membantu Anda menulis Pegon dengan benar."
+        class="mb-6" />
+
+      <!-- Main Content -->
+      <div class="space-y-6">
+        <UAlert color="info" variant="soft" icon="i-lucide-info"
+          description="Scroll ke bawah untuk membaca seluruh panduan hingga selesai." />
+
+        <!-- Scrollable Content -->
+        <div
+          class="max-h-[70vh] overflow-y-auto p-6 md:p-8 bg-default rounded-lg border-2 border-primary/20 shadow-lg space-y-8"
+          @scroll="handleScroll">
+          <!-- Title -->
+          <div class="text-center pb-6 border-b-2 border-primary/20">
+            <h1 class="text-3xl md:text-4xl font-bold text-primary mb-2">
+              ✨ Panduan Pegon Lengkap ✨
+            </h1>
+            <p class="text-muted text-sm">Panduan Resmi Penulisan Aksara Pegon</p>
+          </div>
+
+          <!-- SECTION 1: VOWELS -->
+          <section>
+            <div class="mb-6 p-4 bg-primary/5 rounded-lg">
+              <h2 class="text-2xl font-bold mb-3 flex items-center gap-2">
+                <span
+                  class="flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full text-lg">1</span>
+                Huruf Vokal
+              </h2>
+              <p class="text-sm text-muted">
+                Huruf vokal dapat muncul di <strong>awal</strong>, <strong>tengah</strong>, atau <strong>akhir</strong>
+                kata.
+              </p>
+            </div>
+
+            <!-- Mobile-friendly UTable for Vowels -->
+            <UTable :data="vowelData" :columns="vowelColumns" :ui="{
+              root: 'overflow-x-auto',
+              base: 'min-w-full table-auto',
+              th: 'bg-primary text-white text-center',
+              td: 'text-center p-2 md:p-3'
+            }" />
+          </section>
+
+          <div class="border-t-2 border-dashed border-primary/20 my-8" />
+
+          <!-- SECTION 2: CONSONANTS -->
+          <section>
+            <div class="mb-6 p-4 bg-secondary/5 rounded-lg">
+              <h2 class="text-2xl font-bold mb-3 flex items-center gap-2">
+                <span
+                  class="flex items-center justify-center w-8 h-8 bg-secondary text-white rounded-full text-lg">2</span>
+                Huruf Konsonan
+              </h2>
+              <p class="text-sm text-muted">
+                Konsonan digunakan sebagai kerangka kata. Bentuknya tetap, hanya harakat dan posisi yang berubah.
+              </p>
+            </div>
+
+            <!-- Mobile-friendly UTable for Consonants -->
+            <!-- Mobile: ONE complete table -->
+            <div class="lg:hidden">
+              <UTable :data="consonantData" :columns="consonantColumns" :ui="{
+                root: 'overflow-x-auto',
+                th: 'bg-secondary text-white text-center',
+                td: 'text-center p-2 md:p-3'
+              }" />
+            </div>
+
+            <!-- Desktop: THREE tables side by side -->
+            <div class="hidden lg:grid lg:grid-cols-3 gap-4">
+              <UTable v-for="(columnData, index) in consonantColumns3" :key="index" :data="columnData"
+                :columns="consonantColumns" :ui="{
+                  root: 'overflow-x-auto',
+                  th: 'bg-secondary text-white text-center',
+                  td: 'text-center p-3'
+                }" />
+            </div>
+          </section>
+
+          <div class="border-t-2 border-dashed border-primary/20 my-8" />
+
+          <!-- SECTION 3: SPECIAL COMBINATIONS -->
+          <section>
+            <div class="mb-6 p-4 bg-warning/5 rounded-lg">
+              <h2 class="text-2xl font-bold mb-3 flex items-center gap-2">
+                <span
+                  class="flex items-center justify-center w-8 h-8 bg-warning text-white rounded-full text-lg">3</span>
+                Gabungan Spesial
+              </h2>
+              <p class="text-sm text-muted">
+                Beberapa bunyi khas bahasa lokal menggunakan huruf tambahan khusus dalam Pegon.
+              </p>
+            </div>
+
+            <UTable :data="specialCombinations" :columns="specialColumns" :ui="{
+              root: 'overflow-x-auto',
+              th: 'bg-warning text-white text-center',
+              td: 'text-center p-3 sm:p-1'
+            }" />
+          </section>
+
+          <div class="border-t-2 border-dashed border-primary/20 my-8" />
+
+          <!-- SECTION 4: ARABIC WORDS -->
+          <section>
+            <div class="mb-6 p-4 bg-success/5 rounded-lg">
+              <h2 class="text-2xl font-bold mb-3 flex items-center gap-2">
+                <span
+                  class="flex items-center justify-center w-8 h-8 bg-success text-white rounded-full text-lg">4</span>
+                Kata Benda Bahasa Arab
+              </h2>
+              <p class="text-sm text-muted">
+                Penulisan kata benda dari bahasa Arab menyesuaikan tulisan aslinya.
+              </p>
+            </div>
+
+            <!-- Names Section -->
+            <div class="mb-6">
+              <h3 class="text-lg font-bold mb-3 text-success flex items-center gap-2">
+                <UIcon name="i-lucide-user" class="size-5" />
+                Contoh Nama Orang
+              </h3>
+              <UTable :data="arabicNames" :columns="arabicNamesColumns" :ui="{
+                root: 'overflow-x-auto',
+                th: 'bg-success text-white text-center',
+                td: 'text-center p-3 md:p-4'
+              }" />
+            </div>
+
+            <!-- Places Section -->
+            <div class="mb-6">
+              <h3 class="text-lg font-bold mb-3 text-success flex items-center gap-2">
+                <UIcon name="i-lucide-map-pin" class="size-5" />
+                Contoh Nama Tempat
+              </h3>
+              <UTable :data="arabicPlaces" :columns="arabicPlacesColumns" :ui="{
+                root: 'overflow-x-auto',
+                th: 'bg-success text-white text-center',
+                td: 'text-center p-3 md:p-4'
+              }" />
+            </div>
+
+            <!-- Terms Section -->
+            <div>
+              <h3 class="text-lg font-bold mb-3 text-success flex items-center gap-2">
+                <UIcon name="i-lucide-book-open-text" class="size-5" />
+                Contoh Istilah Khusus
+              </h3>
+              <UTable :data="arabicTerms" :columns="arabicTermsColumns" :ui="{
+                root: 'overflow-x-auto',
+                th: 'bg-success text-white text-center',
+                td: 'text-center p-3 md:p-4'
+              }" />
+            </div>
+          </section>
+
+          <!-- Tips Section -->
+          <div class="mt-8 p-6 bg-info/10 rounded-lg border-2 border-info/25">
+            <h3 class="font-bold text-info flex items-center gap-2 mb-4 text-xl">
+              <UIcon name="i-lucide-lightbulb" class="size-6" />
+              💡 Tips Penting
+            </h3>
+            <ul class="list-disc pl-6 space-y-2 text-sm">
+              <li><strong>Vokal:</strong> Perhatikan posisi huruf vokal (awal, tengah, akhir) karena di beberapa kata
+                bentuknya bisa berbeda</li>
+              <li><strong>Gabungan Khusus:</strong> NG, NY, SY memiliki huruf tersendiri dalam Pegon</li>
+              <li><strong>Kata Arab:</strong> Kata benda dari bahasa Arab ditulis menyesuaikan tulisan aslinya</li>
+            </ul>
+          </div>
+
+          <!-- Footer -->
+          <div class="mt-8 pt-6 border-t-2 border-primary/20 text-center text-xs text-muted space-y-1">
+            <p>Terakhir diperbarui: Oktober 2025 | Versi 1.0</p>
+          </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div v-if="!hasScrolledToBottom" class="flex items-center gap-2 text-warning justify-center animate-pulse">
+          <UIcon name="i-lucide-arrow-down" class="size-5 animate-bounce" />
+          <span class="text-sm font-medium">Silakan scroll ke bawah hingga selesai untuk melanjutkan</span>
+        </div>
+
+        <!-- Confirmation Checkbox -->
+        <UCheckbox v-if="!hasCompletedOnboarding" v-model="hasConfirmed" :disabled="!hasScrolledToBottom"
+          color="primary" label="✓ Saya telah membaca dan memahami seluruh Panduan Pegon"
+          description="Saya akan menggunakan panduan ini sebagai referensi dalam menulis Pegon dengan benar" required />
+
+        <!-- Complete Button -->
+        <UButton v-if="hasCompletedOnboarding" icon="lucide:home" label="Kembali ke Home" color="primary" size="xl"
+          to="/" />
+        <UButton v-else :disabled="!hasScrolledToBottom || !hasConfirmed" color="primary" size="xl" block
+          icon="i-lucide-check-circle" @click="completeOnboarding">
+          <span class="font-bold">Saya Siap - Lanjutkan ke Aplikasi</span>
+        </UButton>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* RTL support */
+[dir="rtl"] {
+  direction: rtl;
+  unicode-bidi: embed;
+}
+
+/* Custom scrollbar */
+div::-webkit-scrollbar {
+  width: 10px;
+}
+
+div::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+div::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 5px;
+}
+
+div::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #5568d3 0%, #63408d 100%);
+}
+</style>

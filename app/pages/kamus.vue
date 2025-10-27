@@ -1,108 +1,377 @@
-<template>
-  <div class="container max-w-2xl mx-auto p-4">
-    <header class="flex items-center my-8">
-      <NuxtLink to="/" class="text-blue-500">&lt; Back</NuxtLink>
-      <h1 class="text-4xl font-bold mx-auto">Kamus Kustom</h1>
-    </header>
-
-    <main class="bg-white p-6 rounded-lg shadow-lg min-h-[240px]">
-      <!-- table header -->
-      <div class="grid grid-cols-2 gap-4 font-semibold border-b pb-2 mb-3">
-        <div>Teks Indonesia</div>
-        <div class="text-right">Pegon</div>
-      </div>
-
-      <ul>
-        <li v-for="entry in paginatedEntries" :key="entry.id" class="grid grid-cols-2 items-center p-2 border-b">
-          <div>{{ entry.teks_ind }}</div>
-          <div class="text-right" dir="rtl">{{ entry.pegon }}</div>
-        </li>
-      </ul>
-
-      <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <button class="px-2 py-1 text-sm bg-gray-200 rounded disabled:opacity-50" :disabled="currentPage === 1" @click="prevPage">Prev</button>
-          <button class="px-2 py-1 text-sm bg-gray-200 rounded disabled:opacity-50" :disabled="currentPage === totalPages" @click="nextPage">Next</button>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <label for="perPage" class="text-sm">Per halaman:</label>
-          <select id="perPage" v-model.number="perPage" class="border rounded px-2 py-1 text-sm w-24">
-            <option :value="5">5</option>
-            <option :value="10">10</option>
-            <option :value="20">20</option>
-          </select>
-        </div>
-
-        <div class="text-sm">
-          Halaman {{ currentPage }} / {{ totalPages }} — Total: {{ total }}
-        </div>
-      </div>
-
-      <nav class="mt-3 flex flex-wrap justify-center gap-2">
-        <button v-for="p in pagesToShow" :key="p" @click="goToPage(p)"
-          :class="[ 'px-2 py-1 rounded text-sm', { 'bg-blue-500 text-white': p === currentPage, 'bg-gray-100': p !== currentPage } ]">
-          {{ p }}
-        </button>
-      </nav>
-    </main>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { h, resolveComponent } from 'vue'
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import type { TableColumn } from '@nuxt/ui'
+import type { Table } from '@tanstack/vue-table'
 
-type DictionaryEntry = { id: number; teks_ind: string; pegon: string; createdAt: Date };
-// initialize state with an empty array to avoid undefined in computed properties
-const customDictionary = useState<DictionaryEntry[]>('customDictionary', () => [])
 
-const currentPage = ref(1)
-const perPage = ref(10)
+const UButton = resolveComponent('UButton')
+const UDropdownMenu = resolveComponent('UDropdownMenu')
 
-const total = computed(() => customDictionary.value.length)
-const totalPages = computed(() => Math.max(1, Math.ceil(total.value / perPage.value)))
+type Dictionary = {
+  id: number
+  teks_ind: string
+  pegon: string
+  created_at: string
+  updated_at: string
+}
 
-const paginatedEntries = computed(() => {
-  const start = (currentPage.value - 1) * perPage.value
-  return customDictionary.value.slice(start, start + perPage.value)
+const dictionary = useDictionary()
+
+// Search state
+const globalFilter = ref('')
+const isExactMode = ref(false)
+
+// Compute the search mode from the boolean
+const searchMode = computed(() => isExactMode.value ? 'exact' : 'contain')
+
+// Use the composable with reactive search and mode
+const { data: apiData, status, refresh } = dictionary.useGetAll(globalFilter, searchMode)
+
+function clearSearch() {
+  globalFilter.value = ''
+}
+
+const toast = useToast()
+const table = useTemplateRef<{ tableApi: Table<Dictionary> }>('table')
+
+// Computed values for pagination
+const paginationInfo = computed(() => {
+  if (!table.value?.tableApi) {
+    return {
+      start: 0,
+      end: 0,
+      total: 0,
+      currentPage: 1,
+      pageSize: 10
+    }
+  }
+
+  const state = table.value.tableApi.getState().pagination
+  const totalRows = table.value.tableApi.getFilteredRowModel().rows.length
+
+  return {
+    start: (state.pageIndex * state.pageSize) + 1,
+    end: Math.min((state.pageIndex + 1) * state.pageSize, totalRows),
+    total: totalRows,
+    currentPage: state.pageIndex + 1,
+    pageSize: state.pageSize
+  }
 })
 
-const pagesToShow = computed(() => {
-  // show a small window of pages around current page
-  const maxButtons = 7
-  const pages: number[] = []
-  const totalP = totalPages.value
-  let start = Math.max(1, currentPage.value - Math.floor(maxButtons / 2))
-  let end = Math.min(totalP, start + maxButtons - 1)
-  if (end - start + 1 < maxButtons) start = Math.max(1, end - maxButtons + 1)
-  for (let i = start; i <= end; i++) pages.push(i)
-  return pages
+// Edit modal state
+const isEditModalOpen = ref(false)
+const editingItem = ref<Dictionary | null>(null)
+const editForm = reactive({
+  teks_ind: '',
+  pegon: ''
+})
+const isUpdating = ref(false)
+
+// Delete modal state
+const isDeleteModalOpen = ref(false)
+const deletingId = ref<number | null>(null)
+const isDeleting = ref(false)
+
+const columns: TableColumn<Dictionary>[] = [{
+  accessorKey: 'id',
+  header: ({ column }) => {
+    const isSorted = column.getIsSorted()
+
+    return h(UButton, {
+      color: 'neutral',
+      variant: 'ghost',
+      label: 'ID',
+      icon: isSorted ? (isSorted === 'asc' ? 'lucide:arrow-up-narrow-wide' : 'lucide:arrow-down-wide-narrow') : 'lucide:arrow-up-down',
+      onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+    })
+  },
+  cell: ({ row }) => `#${row.getValue('id')}`
+}, {
+  accessorKey: 'teks_ind',
+  header: ({ column }) => {
+    const isSorted = column.getIsSorted()
+
+    return h(UButton, {
+      color: 'neutral',
+      variant: 'ghost',
+      label: 'Indonesia',
+      icon: isSorted ? (isSorted === 'asc' ? 'lucide:arrow-up-narrow-wide' : 'lucide:arrow-down-wide-narrow') : 'lucide:arrow-up-down',
+      onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+    })
+  }
+}, {
+  accessorKey: 'pegon',
+  header: ({ column }) => {
+    const isSorted = column.getIsSorted()
+
+    return h(UButton, {
+      color: 'neutral',
+      variant: 'ghost',
+      label: 'Pegon',
+      icon: isSorted ? (isSorted === 'asc' ? 'lucide:arrow-up-narrow-wide' : 'lucide:arrow-down-wide-narrow') : 'lucide:arrow-up-down',
+      onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+    })
+  },
+  cell: ({ row }) => h('div', { class: 'text-right text-lg font-pegon' }, row.getValue('pegon'))
+}, {
+  id: 'actions',
+  header: '',
+  cell: ({ row }) => {
+    const items = [{
+      label: 'Edit',
+      icon: 'lucide:edit',
+      onSelect: () => handleEdit(row.original)
+    }, {
+      label: 'Delete',
+      icon: 'lucide:trash',
+      color: 'error',
+      onSelect: () => confirmDelete(row.original.id)
+    }]
+
+    return h('div', { class: 'text-right' }, h(UDropdownMenu, {
+      items,
+      'aria-label': 'Actions'
+    }, () => h(UButton, {
+      icon: 'lucide:ellipsis-vertical',
+      color: 'neutral',
+      variant: 'ghost',
+      size: 'sm',
+      'aria-label': 'Actions menu'
+    })))
+  }
+}]
+
+const sorting = ref([{
+  id: 'id',
+  desc: true
+}])
+
+const pagination = ref({
+  pageIndex: 0,
+  pageSize: 10
 })
 
-async function fetchEntries() {
+// Edit handlers
+function handleEdit(item: Dictionary) {
+  editingItem.value = item
+  editForm.teks_ind = item.teks_ind
+  editForm.pegon = item.pegon
+  isEditModalOpen.value = true
+}
+
+async function saveEdit() {
+  if (!editingItem.value?.id) {
+    toast.add({
+      title: 'Error',
+      description: 'ID tidak valid',
+      color: 'error',
+      icon: 'lucide:alert-circle'
+    })
+    return
+  }
+
+  if (!editForm.teks_ind.trim() || !editForm.pegon.trim()) {
+    toast.add({
+      title: 'Validasi Gagal',
+      description: 'Teks Indonesia dan Pegon harus diisi',
+      color: 'warning',
+      icon: 'lucide:alert-circle'
+    })
+    return
+  }
+
+  isUpdating.value = true
+
   try {
-    const data = await $fetch<DictionaryEntry[]>('/api/dictionary')
-    customDictionary.value = data ?? []
-    if (currentPage.value > totalPages.value) currentPage.value = totalPages.value
-  } catch (error) {
-    console.error('Failed to fetch dictionary entries:', error)
+    await dictionary.update(editingItem.value.id, {
+      teks_ind: editForm.teks_ind.trim(),
+      pegon: editForm.pegon.trim()
+    })
+
+    isEditModalOpen.value = false
+    await refresh()
+
+    toast.add({
+      title: 'Berhasil',
+      description: 'Data berhasil diperbarui',
+      color: 'success',
+      icon: 'lucide:check-circle'
+    })
+  } catch (error: any) {
+    console.error('Update failed:', error)
+    toast.add({
+      title: 'Gagal',
+      description: error.message || 'Gagal memperbarui data',
+      color: 'error',
+      icon: 'lucide:alert-circle'
+    })
+  } finally {
+    isUpdating.value = false
   }
 }
 
-onMounted(fetchEntries)
-
-watch(perPage, () => {
-  // reset to first page when page size changes
-  currentPage.value = 1
-})
-
-function goToPage(n: number) {
-  if (n >= 1 && n <= totalPages.value) currentPage.value = n
+// Delete handlers
+function confirmDelete(id: number) {
+  deletingId.value = id
+  isDeleteModalOpen.value = true
 }
-function nextPage() {
-  if (currentPage.value < totalPages.value) currentPage.value++
+
+async function handleDelete() {
+  if (!deletingId.value) return
+
+  isDeleting.value = true
+
+  try {
+    await dictionary.remove(deletingId.value)
+
+    isDeleteModalOpen.value = false
+    await refresh()
+
+    toast.add({
+      title: 'Berhasil',
+      description: 'Data berhasil dihapus',
+      color: 'success',
+      icon: 'lucide:check-circle'
+    })
+  } catch (error: any) {
+    console.error('Delete failed:', error)
+    toast.add({
+      title: 'Gagal',
+      description: error.message || 'Gagal menghapus data',
+      color: 'error',
+      icon: 'lucide:alert-circle'
+    })
+  } finally {
+    isDeleting.value = false
+    deletingId.value = null
+  }
 }
-function prevPage() {
-  if (currentPage.value > 1) currentPage.value--
+
+function cancelDelete() {
+  isDeleteModalOpen.value = false
+  deletingId.value = null
 }
 </script>
+
+<template>
+  <UContainer class="max-w-2xl min-h-screen px-3 sm:px-4 py-4 sm:py-6 pb-24 sm:pb-32">
+    <div class="space-y-4 sm:space-y-6">
+      <!-- Header -->
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <h1 class="text-xl sm:text-2xl font-bold truncate">Kamus Pegon</h1>
+          <p class="text-xs sm:text-sm text-muted truncate">Daftar kamus Latin ke Pegon</p>
+        </div>
+
+        <!-- Home button: with label on desktop, icon only on mobile -->
+        <UButton icon="lucide:home" label="Home" color="primary" size="sm" to="/"
+          class="shrink-0 hidden sm:inline-flex" />
+        <UButton icon="lucide:home" color="primary" size="sm" to="/" square class="shrink-0 sm:hidden"
+          aria-label="Home" />
+      </div>
+
+      <!-- Search bar with clear button and mode switch -->
+      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <!-- Search input -->
+        <UInput v-model="globalFilter" placeholder="Cari teks Indonesia atau Pegon..." icon="lucide:search"
+          class="flex-1">
+          <template #trailing>
+            <UButton v-if="globalFilter" color="neutral" variant="link" icon="lucide:x" size="xs" @click="clearSearch"
+              aria-label="Clear search" class="-m-1" />
+          </template>
+        </UInput>
+
+        <!-- Search mode switch -->
+        <div
+          class="flex items-center gap-2 justify-between sm:justify-start bg-elevated/50 sm:bg-transparent px-3 py-2 sm:p-0 rounded-md sm:rounded-none -mx-1 sm:mx-0">
+          <span class="text-xs sm:text-sm text-muted sm:hidden">Pencarian Presisi</span>
+          <USwitch id="mode-switch" v-model="isExactMode" label="Presisi" :ui="{ wrapper: 'hidden sm:block' }" />
+        </div>
+      </div>
+
+
+      <!-- Table -->
+      <div class="border border-default rounded-md sm:rounded-lg overflow-x-auto -mx-3 sm:mx-0">
+        <UTable ref="table" :key="`${pagination.pageIndex}-${pagination.pageSize}`" v-model:sorting="sorting"
+          v-model:pagination="pagination" :data="apiData || []" :columns="columns" :loading="status === 'pending'"
+          :pagination-options="{
+            getPaginationRowModel: getPaginationRowModel()
+          }" :ui="{
+            root: 'min-w-full',
+            td: 'px-2 sm:px-4 py-2 sm:py-4 text-xs sm:text-sm whitespace-nowrap',
+            th: 'px-2 sm:px-4 py-2 sm:py-3.5 text-xs sm:text-sm'
+          }" />
+      </div>
+
+      <!-- Pagination Footer -->
+      <div v-if="apiData && table?.tableApi" class="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="text-xs sm:text-sm text-muted order-2 sm:order-1">
+          <span class="hidden sm:inline">Menampilkan </span>
+          {{ paginationInfo.start }}-{{ paginationInfo.end }} dari {{ paginationInfo.total }}
+        </div>
+
+        <UPagination show-edges :default-page="paginationInfo.currentPage" :items-per-page="paginationInfo.pageSize"
+          :total="paginationInfo.total" :sibling-count="1" size="sm"
+          @update:page="(p: number) => table!.tableApi!.setPageIndex(p - 1)" class="order-1 sm:order-2" />
+      </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <UModal v-model:open="isEditModalOpen" title="Edit Entri Kamus" description="Ubah teks Indonesia atau Pegon" :ui="{
+      footer: 'flex gap-2 justify-end',
+      content: 'sm:max-w-lg'
+    }">
+      <template #body>
+        <div class="space-y-3 sm:space-y-4">
+          <div>
+            <label for="edit-teks-ind" class="block text-xs sm:text-sm font-medium mb-1.5">
+              Teks Indonesia
+            </label>
+            <UInput id="edit-teks-ind" class="w-full" v-model="editForm.teks_ind" placeholder="Masukkan teks Indonesia"
+              :disabled="isUpdating" />
+          </div>
+
+          <div>
+            <label for="edit-pegon" class="block text-xs sm:text-sm font-medium mb-1.5">
+              Pegon
+            </label>
+            <UInput id="edit-pegon" v-model="editForm.pegon" placeholder="Masukkan teks Pegon"
+              class="w-full font-pegon text-right text-base sm:text-lg" :disabled="isUpdating" />
+          </div>
+        </div>
+      </template>
+
+      <template #footer>
+        <UButton label="Batal" color="neutral" variant="outline" :disabled="isUpdating" @click="isEditModalOpen = false"
+          class="flex-1 sm:flex-initial" />
+        <UButton label="Simpan" icon="lucide:save" :loading="isUpdating" @click="saveEdit"
+          class="flex-1 sm:flex-initial" />
+      </template>
+    </UModal>
+
+    <!-- Delete Confirmation Modal -->
+    <UModal v-model:open="isDeleteModalOpen" title="Konfirmasi Hapus"
+      description="Apakah Anda yakin ingin menghapus entri ini? Tindakan ini tidak dapat dibatalkan." :ui="{
+        footer: 'flex gap-2 justify-end',
+        content: 'sm:max-w-lg'
+      }">
+      <template #body>
+        <div class="flex items-start sm:items-center gap-3 p-3 sm:p-4 bg-error/10 rounded-lg border border-error/20">
+          <UIcon name="lucide:alert-triangle" class="size-5 sm:size-6 text-error shrink-0 mt-0.5 sm:mt-0" />
+          <div class="text-xs sm:text-sm">
+            <p class="font-medium text-error mb-0.5">Peringatan!</p>
+            <p class="text-muted">Data yang dihapus tidak dapat dikembalikan.</p>
+          </div>
+        </div>
+      </template>
+
+      <template #footer>
+        <UButton label="Batal" color="neutral" variant="outline" :disabled="isDeleting" @click="cancelDelete"
+          class="flex-1 sm:flex-initial" />
+        <UButton label="Hapus" icon="lucide:trash" color="error" :loading="isDeleting" @click="handleDelete"
+          class="flex-1 sm:flex-initial" />
+      </template>
+    </UModal>
+  </UContainer>
+</template>
