@@ -103,7 +103,7 @@ const vowelData: VowelRow[] = [
   {
     letter: 'O',
     awal: { arab: 'ا۠', example: 'ا۠رَاعۡ', latin: 'Orang' },
-    tengah: { arab: 'ا۠', example: 'تا۠ڤِي', latin: 'Topi' },
+    tengah: { arab: 'ا۠', example: 'با۠لٓهۡ', latin: 'Boleh' },
     akhir: { arab: 'ا۠', example: 'جَاڮا۠', latin: 'Jago' }
   }
 ]
