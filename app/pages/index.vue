@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
-import { transliterateParagraph } from '../utils/logic';
+import { transliterateParagraph } from '../utils/pegonTransliteration';
 
 definePageMeta({
   middleware: 'guide-check'
