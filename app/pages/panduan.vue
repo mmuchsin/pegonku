@@ -78,25 +78,25 @@ function completeOnboarding() {
 const vowelData: VowelRow[] = [
   {
     letter: 'A',
-    awal: { arab: 'اَ', example: 'اَفِيۡ', latin: 'Api' },
+    awal: { arab: 'أَ', example: 'أَفِيۡ', latin: 'Api' },
     tengah: { arab: 'ـَا', example: 'فَاسَارۡ', latin: 'Pasar' },
     akhir: { arab: 'ـَا', example: 'سَامَا', latin: 'Sama' }
   },
   {
     letter: 'I',
-    awal: { arab: 'اِ', example: 'اِتُو', latin: 'Itu' },
+    awal: { arab: 'ئِ', example: 'ئِتُو', latin: 'Itu' },
     tengah: { arab: 'ـِي', example: 'تِيۡڮَا', latin: 'Tiga' },
     akhir: { arab: 'ـِي', example: 'سِينِي', latin: 'Sini' }
   },
   {
     letter: 'U',
-    awal: { arab: 'اُ', example: 'اُبِي', latin: 'Ubi' },
+    awal: { arab: 'ؤُ', example: 'ؤُبِي', latin: 'Ubi' },
     tengah: { arab: 'ـُو', example: 'كُوكُو', latin: 'Kuku' },
     akhir: { arab: 'ـُو', example: 'سُوكُو', latin: 'Suku' }
   },
   {
     letter: 'E',
-    awal: { arab: 'آ', example: 'آنَاكۡ', latin: 'Enak' },
+    awal: { arab: 'ئٓ', example: 'ئٓنَاكۡ', latin: 'Enak' },
     tengah: { arab: 'ـٓ', example: 'بٓكَالۡ', latin: 'Bekal' },
     akhir: { arab: 'ـٓ', example: 'نَاسِي', latin: 'Nasi' }
   },
