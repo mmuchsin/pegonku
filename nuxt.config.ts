@@ -5,12 +5,13 @@ export default defineNuxtConfig({
   compatibilityDate: "2024-05-07",
   devtools: { enabled: true },
   modules: [
-    '@nuxt/ui',
+    "@nuxt/ui",
     "@nuxt/icon",
     "@vueuse/nuxt",
     "@nuxtjs/google-fonts",
+    "@nuxt/test-utils/module",
   ],
-  css: ['~/assets/css/main.css'],
+  css: ["~/assets/css/main.css"],
   vite: {
     plugins: [
       tailwindcss(),
@@ -18,8 +19,8 @@ export default defineNuxtConfig({
   },
   googleFonts: {
     families: {
-      'Scheherazade New': [400, 500, 600, 700]
+      "Scheherazade New": [400, 500, 600, 700]
     },
-    display: 'swap'
+    display: "swap"
   }
 })
