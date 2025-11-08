@@ -4,7 +4,7 @@ import { navigateTo } from '#app' // Standard Nuxt 3 import for navigation
 import { useGuideStatus } from '~/composables/useGuideStatus'
 // Using your provided import path. 
 // If you're using TanStack Table directly, it might be '@tanstack/vue-table'
-import type { TableColumn } from '@nuxt/ui' 
+import type { TableColumn } from '@nuxt/ui'
 
 // --- 💡 TYPE DEFINITIONS ---
 // We define the shape of your data here.
@@ -147,14 +147,28 @@ const vowelColumns: TableColumn<VowelRow>[] = [
 // CONSONANT TABLE DATA & COLUMNS
 // Apply the ConsonantRow type
 const consonantData: ConsonantRow[] = [
-  { latin: 'B', pegon: 'ب' }, { latin: 'K', pegon: 'ك' }, { latin: 'S', pegon: 'س' },
-  { latin: 'C', pegon: 'چ' }, { latin: 'L', pegon: 'ل' }, { latin: 'T', pegon: 'ت' },
-  { latin: 'D', pegon: 'د' }, { latin: 'M', pegon: 'م' }, { latin: 'V', pegon: 'ڥ' },
-  { latin: 'F', pegon: 'ف' }, { latin: 'N', pegon: 'ن' }, { latin: 'W', pegon: 'و' },
-  { latin: 'G', pegon: 'ڮ' }, { latin: 'P', pegon: 'ڤ' }, { latin: 'Y', pegon: 'ي' },
-  { latin: 'H', pegon: 'ه' }, { latin: 'Q', pegon: 'ق' }, { latin: 'Z', pegon: 'ز' },
-  { latin: 'J', pegon: 'ج' }, { latin: 'R', pegon: 'ر' }
-].filter(item => item.latin)
+  { latin: 'B', pegon: 'ب' },
+  { latin: 'C', pegon: 'چ' },
+  { latin: 'D', pegon: 'د' },
+  { latin: 'F', pegon: 'ف' },
+  { latin: 'G', pegon: 'ڮ' },
+  { latin: 'H', pegon: 'ه' },
+  { latin: 'J', pegon: 'ج' },
+  { latin: 'K', pegon: 'ك' },
+  { latin: 'L', pegon: 'ل' },
+  { latin: 'M', pegon: 'م' },
+  { latin: 'N', pegon: 'ن' },
+  { latin: 'P', pegon: 'ڤ' },
+  { latin: 'Q', pegon: 'ق' },
+  { latin: 'R', pegon: 'ر' },
+  { latin: 'S', pegon: 'س' },
+  { latin: 'T', pegon: 'ت' },
+  { latin: 'V', pegon: 'ڥ' },
+  { latin: 'W', pegon: 'و' },
+  { latin: 'Y', pegon: 'ي' },
+  { latin: 'Z', pegon: 'ز' }
+].filter(item => item.latin);
+
 
 // Apply the ConsonantRow type
 const consonantColumns: TableColumn<ConsonantRow>[] = [
@@ -460,7 +474,8 @@ const arabicTermsColumns: TableColumn<ArabicRow>[] = [
               💡 Tips Penting
             </h3>
             <ul class="list-disc pl-6 space-y-2 text-sm">
-              <li><strong>Vokal:</strong> Perhatikan penulisan huruf vokal 'o'. Perhatikan penulisan vokal yang bergandengan karena di beberapa kata
+              <li><strong>Vokal:</strong> Perhatikan penulisan huruf vokal 'o'. Perhatikan penulisan vokal yang
+                bergandengan karena di beberapa kata
                 bentuknya bisa berbeda</li>
               <li><strong>Gabungan Khusus:</strong> TO, SO, KO memiliki huruf tersendiri</li>
               <li><strong>Kata Arab:</strong> Kata benda dari bahasa Arab ditulis menyesuaikan tulisan aslinya</li>
