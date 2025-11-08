@@ -201,11 +201,11 @@ const specialCombinations: SpecialRow[] = [
   { combo: 'NG', pegon: 'ع', example: 'عَاجِي', read: 'Ngaji' },
   { combo: 'NY', pegon: 'ۑ', example: 'ۑَامُوكۡ', read: 'Nyamuk' },
   { combo: 'SY', pegon: 'ش', example: 'شُوكُورۡ', read: 'Syukur' },
-  { combo: 'DZ', pegon: 'ذ', example: 'ذات', read: 'Dzat' },
+  { combo: 'DZ', pegon: 'ذ', example: 'ذَاتۡ', read: 'Dzat' },
   { combo: 'KH', pegon: 'خ', example: 'خُوسُوسۡ', read: 'Khusus' },
-  { combo: 'TO', pegon: 'ط', example: 'طَلٓرَانۡسِي', read: 'Toleransi' },
-  { combo: 'SO', pegon: 'ص', example: 'صَمۡبا۠ع', read: 'Sombong' },
-  { combo: 'KO', pegon: 'ق', example: 'قَڤِي', read: 'Kopi' }
+  { combo: 'TO', pegon: 'طَ', example: 'طَلٓرَانۡسِي', read: 'Toleransi' },
+  { combo: 'SO', pegon: 'صَ', example: 'صَمۡبا۠ع', read: 'Sombong' },
+  { combo: 'KO', pegon: 'قَ', example: 'قَڤِي', read: 'Kopi' }
 ]
 
 // Apply the SpecialRow type
