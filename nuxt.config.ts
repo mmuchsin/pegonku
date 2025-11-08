@@ -1,11 +1,26 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineNuxtConfig({
   compatibilityDate: "2024-05-07",
   devtools: { enabled: true },
-  modules: ['@nuxtjs/tailwindcss', '@nuxt/icon'],
+  modules: [
+    "@nuxt/ui",
+    "@nuxt/icon",
+    "@vueuse/nuxt",
+    "@nuxtjs/google-fonts",
+    "@nuxt/test-utils/module",
+  ],
+  css: ["~/assets/css/main.css"],
   vite: {
-    server: {
-      allowedHosts: ['devserver-deploy-netlify-supabase--pegonku.netlify.app']
-    }
+    plugins: [
+      tailwindcss(),
+    ],
+  },
+  googleFonts: {
+    families: {
+      "Scheherazade New": [400, 500, 600, 700]
+    },
+    display: "swap"
   }
 })

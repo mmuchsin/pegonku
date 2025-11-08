@@ -1,206 +1,239 @@
-<template>
-  <div class="bg-slate-100 min-h-screen font-sans text-slate-800">
-    <!-- UPDATED: Added padding-bottom to account for the fixed footer -->
-    <div class="container mx-auto p-4 max-w-2xl pb-24">
-      <header class="text-center my-6 md:my-10">
-        <h1 class="text-3xl md:text-4xl font-bold text-emerald-700">Indonesia → Pegon</h1>
-        <p class="text-slate-500 mt-2">Alat bantu transliterasi dengan kamus kustom.</p>
-      </header>
-      
-      <main class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
-        <!-- Input Text Area -->
-        <div class="relative">
-          <textarea
-            v-model="inputText"
-            class="w-full p-4 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow resize-none"
-            rows="6"
-            placeholder="Tulis teks Indonesia di sini..."
-          ></textarea>
-        </div>
-
-        <!-- Convert Button -->
-        <div class="flex justify-center my-4">
-            <button
-                @click="handleConvert"
-                class="bg-emerald-600 text-white font-bold py-3 px-6 rounded-md shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all transform hover:scale-105 flex items-center gap-2"
-            >
-                <span>Convert</span>
-            </button>
-        </div>
-
-        <!-- Output Display -->
-        <div id="output-section" class="relative">
-          <div
-            class="w-full p-4 pb-14 border border-slate-200 rounded-xl bg-slate-50 text-right whitespace-pre-wrap font-pegon text-3xl leading-relaxed"
-            dir="rtl"
-            style="min-height: 160px;"
-          >
-            <span v-if="!pegonResult" class="text-slate-400 text-lg font-sans" dir="ltr">Hasil akan muncul di sini...</span>
-            <span v-else>{{ pegonResult }}</span>
-          </div>
-          
-          <!-- Action Buttons -->
-          <div class="absolute bottom-3 right-3 flex gap-2">
-            <button 
-              @click="clearAll" 
-              class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-100 rounded-full transition-colors"
-              title="Hapus Semua Teks"
-            >
-              <Icon name="lucide:square-x" class="h-6 w-6" />
-            </button>
-            <button 
-              @click="copyPegonResult" 
-              class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-100 rounded-full transition-colors"
-              title="Salin Hasil Pegon"
-            >
-              <Icon v-if="!copied" name="lucide:copy" class="h-6 w-6" />
-              <Icon v-else name="lucide:copy-check" class="h-6 w-6 text-emerald-600" />
-            </button>
-          </div>
-        </div>
-      </main>
-      
-      <!-- Footer Navigation -->
-      <footer class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-slate-200">
-        <nav class="flex justify-around max-w-2xl mx-auto">
-          <NuxtLink to="/" class="flex flex-col items-center gap-1 p-3 text-emerald-600 w-full">
-            <Icon name="lucide:home" class="h-6 w-6" />
-            <span class="text-xs font-semibold">Home</span>
-          </NuxtLink>
-          <NuxtLink to="/kamus" class="flex flex-col items-center gap-1 p-3 text-slate-500 hover:text-emerald-600 w-full">
-            <Icon name="lucide:book" class="h-6 w-6" />
-            <span class="text-xs font-semibold">Kamus</span>
-          </NuxtLink>
-          <button @click="showModal = true" class="flex flex-col items-center gap-1 p-3 text-slate-500 hover:text-emerald-600 w-full">
-            <Icon name="lucide:square-plus" class="h-6 w-6" />
-            <span class="text-xs font-semibold">Tambah Kata</span>
-          </button>
-        </nav>
-      </footer>
-
-      <!-- Add/Edit Word Modal -->
-      <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md">
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">Tambah ke Kamus Kustom</h2>
-          <form @submit.prevent="saveToDictionary">
-            <div class="mb-4">
-              <label for="teks_ind" class="block text-sm font-medium text-slate-600 mb-1">Teks Indonesia</label>
-              <input type="text" id="teks_ind" v-model="newWord.teks_ind" class="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            </div>
-            <div class="mb-6">
-              <label for="pegon" class="block text-sm font-medium text-slate-600 mb-1">Teks Pegon</label>
-              <input type="text" id="pegon" v-model="newWord.pegon" class="w-full p-2 border border-slate-300 rounded-lg text-right font-pegon text-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500" dir="rtl">
-            </div>
-            <div class="flex justify-end gap-3">
-              <button type="button" @click="showModal = false" class="px-5 py-2 bg-slate-100 text-slate-700 font-semibold rounded-full hover:bg-slate-200">Batal</button>
-              <button type="submit" class="px-5 py-2 bg-emerald-600 text-white font-semibold rounded-full hover:bg-emerald-700">Simpan</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
-<style>
-  /* Import fonts for the application */
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap');
-  
-  /* NEW: Add smooth scrolling behavior to the entire page */
-  html {
-    scroll-behavior: smooth;
-  }
-</style>
-
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { transliterateParagraph } from '../utils/logic';
+import { ref, watch, nextTick } from 'vue';
+import { transliterateParagraph } from '../utils/pegonTransliteration';
 
-type DictionaryEntry = { 
-  id?: number; 
-  teks_ind: string; 
-  pegon: string; 
-  created_at?: string 
+definePageMeta({
+  middleware: 'guide-check'
+})
+
+
+// Define types
+type DictionaryEntry = {
+  id?: number;
+  teks_ind: string;
+  pegon: string;
+  created_at?: string
 };
 
+// Component state
 const inputText = ref('');
 const pegonResult = ref('');
-const showModal = ref(false);
+const isModalOpen = ref(false);
 const newWord = ref({ teks_ind: '', pegon: '' });
-const customDictionary = useState<DictionaryEntry[]>('customDictionary', () => []);
 const copied = ref(false);
+const customDictionary = useState<DictionaryEntry[]>('customDictionary', () => []);
 
-// Fetch dictionary data from the server
-const { data, refresh } = await useFetch('/api/dictionary');
+// Composables
+const toast = useToast();
+const dictionary = useDictionary();
+
+// Fetch dictionary data from the server using useFetch
+const { data, refresh } = await useFetch<DictionaryEntry[]>('/api/dictionary', {
+  key: 'dictionary-all'
+});
 
 // Initialize or update the dictionary when data is fetched
 watch(data, (newData) => {
   if (newData) {
-    customDictionary.value = newData as DictionaryEntry[];
+    customDictionary.value = newData;
   }
 }, { immediate: true });
 
 // Function to handle the conversion and scroll
-async function handleConvert() { // 2. Jadikan fungsinya async
-    if (!inputText.value.trim()) {
-        pegonResult.value = '';
-        return;
-    }
-    pegonResult.value = transliterateParagraph(inputText.value, customDictionary.value);
-    
-    await nextTick(); // 3. Tunggu hingga DOM diperbarui
-
-    // // Sekarang, perintah scroll akan bekerja dengan benar
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-}
-
-// NEW: Function to clear all text and scroll to top
-function clearAll() {
-    inputText.value = '';
+async function handleConvert() {
+  if (!inputText.value.trim()) {
     pegonResult.value = '';
-    jumpToTop();
+    return;
+  }
+  pegonResult.value = transliterateParagraph(inputText.value, customDictionary.value);
+
+  await nextTick();
+  const outputSection = document.getElementById('output-section');
+  if (outputSection) {
+    outputSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
-// NEW: Function to scroll to the top of the page
+// Function to scroll to the top of the page
 function jumpToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Function to clear all text and scroll to top
+function clearAll() {
+  inputText.value = '';
+  pegonResult.value = '';
+  jumpToTop();
 }
 
 // Function to copy the Pegon result with visual feedback
 async function copyPegonResult() {
   if (!pegonResult.value) {
-    alert('Tidak ada teks untuk disalin.');
+    toast.add({
+      title: 'Tidak ada teks untuk disalin.',
+      color: 'warning',
+      icon: 'lucide:alert-circle'
+    });
     return;
   }
   try {
     await navigator.clipboard.writeText(pegonResult.value);
     copied.value = true;
+    toast.add({
+      title: 'Teks Pegon disalin!',
+      icon: 'lucide:circle-check'
+    });
     setTimeout(() => {
       copied.value = false;
-    }, 2000); // Reset icon after 2 seconds
+    }, 2000);
   } catch (err) {
     console.error('Gagal menyalin teks: ', err);
-    alert('Gagal menyalin teks. Silakan coba salin manual.');
+    toast.add({
+      title: 'Gagal menyalin teks.',
+      description: 'Silakan coba salin manual.',
+      color: 'error',
+      icon: 'lucide:alert-circle'
+    });
   }
 }
 
 // Function to save a new word to the dictionary
 async function saveToDictionary() {
   if (!newWord.value.teks_ind || !newWord.value.pegon) {
-    alert('Kedua kolom harus diisi.');
+    toast.add({
+      title: 'Kolom tidak boleh kosong.',
+      description: 'Teks Indonesia dan Pegon harus diisi.',
+      color: 'warning'
+    });
     return;
   }
+
   try {
-    await $fetch('/api/dictionary', {
-      method: 'POST',
-      body: newWord.value,
-    });
-    showModal.value = false;
+    // Use the composable method instead
+    await dictionary.create(newWord.value);
+
+    isModalOpen.value = false;
     newWord.value = { teks_ind: '', pegon: '' };
-    await refresh(); // Re-fetch the dictionary to get the latest data
+
+    // Refresh the useFetch data
+    await refresh();
+
+    // Toast is handled by the composable
   } catch (error) {
+    // Error toast is already handled by the composable
     console.error('Error saving to dictionary:', error);
-    alert('Gagal menyimpan kata ke kamus');
   }
 }
+
+// Color mode
+const colorMode = useColorMode();
+
+const isDark = computed({
+  get() {
+    return colorMode.value === 'dark'
+  },
+  set(_isDark) {
+    colorMode.preference = _isDark ? 'dark' : 'light'
+  }
+});
+
+const showWarning = ref(true);
+
 </script>
+
+
+
+<template>
+  <UContainer class="py-6 sm:py-10 pb-20 sm:pb-24 max-w-2xl min-h-screen">
+    <header class="text-center my-6 md:my-10">
+      <h1 class="text-3xl md:text-4xl font-bold text-primary-600 dark:text-primary-400">Indonesia → Pegon</h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-2">Alat bantu transliterasi dengan kamus kustom.</p>
+    </header>
+
+    <UCard>
+      <div class="space-y-4 min-h-2/3">
+        <UTextarea name="text_ind" class="w-full" v-model="inputText" :rows="6" placeholder="Tulis teks Indonesia di sini..."
+          autoresize />
+
+        <div class="flex justify-center">
+          <UButton @click="handleConvert" size="lg" label="Convert" icon="lucide:arrow-right-left" />
+        </div>
+
+        <div id="output-section" class="relative">
+          <div
+            class="w-full min-h-1/2 p-4 pb-14 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-right whitespace-pre-wrap font-pegon text-3xl leading-relaxed"
+            dir="rtl" style="min-height: 160px;">
+            <span v-if="!pegonResult" class="text-gray-400 dark:text-gray-500 text-lg font-sans" dir="ltr">Hasil akan
+              muncul di sini...</span>
+            <span v-else>{{ pegonResult }}</span>
+          </div>
+
+          <div class="absolute bottom-2 right-2 flex gap-1">
+            <UTooltip text="Hapus Semua Teks">
+              <UButton @click="clearAll" icon="lucide:square-x" color="neutral" variant="ghost"
+                aria-label="Hapus Semua Teks" />
+            </UTooltip>
+            <UTooltip text="Salin Hasil Pegon">
+              <UButton @click="copyPegonResult" :icon="copied ? 'lucide:copy-check' : 'lucide:copy'"
+                :color="copied ? 'success' : 'neutral'" variant="ghost" aria-label="Salin Hasil Pegon" />
+            </UTooltip>
+          </div>
+        </div>
+      </div>
+    </UCard>
+
+    <footer
+      class="fixed bottom-0 left-0 right-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 pb-safe">
+      <nav class="flex justify-around items-center max-w-xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+        <UButton to="/" icon="lucide:home" size="xl" variant="ghost" color="neutral" class="flex-1 justify-center">
+        </UButton>
+
+        <UButton to="/panduan" icon="lucide:book-open" size="xl" variant="ghost" color="neutral"
+          class="flex-1 justify-center">
+        </UButton>
+
+        <UButton to="/kamus" icon="lucide:book" size="xl" variant="ghost" color="neutral" class="flex-1 justify-center">
+        </UButton>
+
+        <UModal v-model:open="isModalOpen" title="Tambah Kamus">
+          <!-- Trigger button goes in default slot -->
+          <UButton icon="lucide:square-plus" size="xl" color="neutral" variant="ghost"
+            class="flex-1 justify-center text-xs min-h-[44px]" />
+
+          <!-- Modal content goes in #body slot -->
+          <template #body>
+            <UForm class="space-y-4" @submit="saveToDictionary">
+              <UFormField label="Teks Indonesia" name="teks_ind">
+                <UInput v-model="newWord.teks_ind" class="w-full text-left text-2xl sm:text-lg" />
+              </UFormField>
+
+              <UFormField label="Teks Pegon" name="pegon">
+                <UInput v-model="newWord.pegon" class="w-full font-pegon text-2xl sm:text-lg text-right"
+                  dir="rtl" />
+              </UFormField>
+
+
+              <div class="flex justify-end gap-2">
+                <UButton label="Cancel" color="neutral" variant="outline" @click="isModalOpen = false" size="lg" />
+                <UButton type="submit" label="Save" size="lg" />
+              </div>
+
+            </UForm>
+          </template>
+        </UModal>
+
+        <UColorModeButton size="xl" class="flex-1 justify-center" />
+      </nav>
+    </footer>
+
+  </UContainer>
+
+
+</template>
+
+<style scoped>
+
+html {
+  scroll-behavior: smooth;
+}
+</style>
