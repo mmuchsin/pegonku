@@ -1,54 +1,91 @@
 <script setup lang="ts">
+import { h, ref, watch, nextTick, computed } from 'vue'
+import { navigateTo } from '#app' // Standard Nuxt 3 import for navigation
 import { useGuideStatus } from '~/composables/useGuideStatus'
-import type { TableColumn } from '@nuxt/ui'
+// Using your provided import path. 
+// If you're using TanStack Table directly, it might be '@tanstack/vue-table'
+import type { TableColumn } from '@nuxt/ui' 
 
-// Use the composable
+// --- 💡 TYPE DEFINITIONS ---
+// We define the shape of your data here.
+
+// For the Vowel table (with nested objects)
+type VowelPosition = {
+  arab: string
+  example: string
+  latin: string
+}
+type VowelRow = {
+  letter: string
+  awal: VowelPosition
+  tengah: VowelPosition
+  akhir: VowelPosition
+}
+
+// For the Consonant table
+type ConsonantRow = {
+  latin: string
+  pegon: string
+}
+
+// For the Special Combinations table
+type SpecialRow = {
+  combo: string
+  pegon: string
+  example: string
+  read: string
+}
+
+// A reusable type for all simple Arabic-to-Pegon tables
+type ArabicRow = {
+  arabic: string
+  pegon: string
+}
+
+// --- ONBOARDING LOGIC ---
+// (Your existing logic, no changes needed)
 const { hasReadGuide, markGuideAsRead } = useGuideStatus()
-
-// Initialize state from the cookie (SSR-friendly)
 const hasCompletedOnboarding = ref(hasReadGuide.value)
 const hasScrolledToBottom = ref(false)
 const hasConfirmed = ref(false)
 
-// Watch for changes in the cookie (optional, if you want to react to changes elsewhere)
 watch(hasReadGuide, (newVal) => {
   hasCompletedOnboarding.value = newVal
 })
 
-// Handle scroll detection
 function handleScroll(event: Event) {
   const element = event.target as HTMLElement
   const scrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50
-
   if (scrolledToBottom && !hasScrolledToBottom.value) {
     hasScrolledToBottom.value = true
   }
 }
 
-// Complete onboarding
 function completeOnboarding() {
   if (hasConfirmed.value && hasScrolledToBottom.value) {
     hasCompletedOnboarding.value = true
-    markGuideAsRead() // This sets the cookie
-
+    markGuideAsRead()
     nextTick(() => {
       navigateTo('/')
     })
   }
 }
 
+// --- TABLE DATA & COLUMNS ---
+
 // VOWEL TABLE DATA & COLUMNS
-const vowelData = [
+// Apply the VowelRow type
+const vowelData: VowelRow[] = [
   {
     letter: 'A',
-    awal: { arab: 'اَ', example: 'اَفِيْ', latin: 'Api' },
-    tengah: { arab: 'ـَا', example: 'فَاسَارْ', latin: 'Pasar' },
+    awal: { arab: 'اَ', example: 'اَفِيۡ', latin: 'Api' },
+    tengah: { arab: 'ـَا', example: 'فَاسَارۡ', latin: 'Pasar' },
     akhir: { arab: 'ـَا', example: 'سَامَا', latin: 'Sama' }
   },
   {
     letter: 'I',
     awal: { arab: 'اِ', example: 'اِتُو', latin: 'Itu' },
-    tengah: { arab: 'ـِي', example: 'تِيْڮَا', latin: 'Tiga' },
+    tengah: { arab: 'ـِي', example: 'تِيۡڮَا', latin: 'Tiga' },
     akhir: { arab: 'ـِي', example: 'سِينِي', latin: 'Sini' }
   },
   {
@@ -59,19 +96,20 @@ const vowelData = [
   },
   {
     letter: 'E',
-    awal: { arab: 'آ', example: 'آنَاكْ', latin: 'Enak' },
-    tengah: { arab: 'ـٓ', example: 'بٓكَالْ', latin: 'Bekal' },
+    awal: { arab: 'آ', example: 'آنَاكۡ', latin: 'Enak' },
+    tengah: { arab: 'ـٓ', example: 'بٓكَالۡ', latin: 'Bekal' },
     akhir: { arab: 'ـٓ', example: 'نَاسِي', latin: 'Nasi' }
   },
   {
     letter: 'O',
-    awal: { arab: 'ؤُ', example: 'ؤُرَاعْ', latin: 'Orang' },
-    tengah: { arab: 'ـُو', example: 'تُوفِي', latin: 'Topi' },
-    akhir: { arab: 'ـُو', example: 'جَاڮُو', latin: 'Jago' }
+    awal: { arab: 'ا۠', example: 'ا۠رَاعۡ', latin: 'Orang' },
+    tengah: { arab: 'ا۠', example: 'تا۠فِي', latin: 'Topi' },
+    akhir: { arab: 'ا۠', example: 'جَاڮا۠', latin: 'Jago' }
   }
 ]
 
-const vowelColumns: TableColumn<typeof vowelData[0]>[] = [
+// Apply the VowelRow type
+const vowelColumns: TableColumn<VowelRow>[] = [
   {
     accessorKey: 'letter',
     header: 'Huruf',
@@ -107,17 +145,19 @@ const vowelColumns: TableColumn<typeof vowelData[0]>[] = [
 ]
 
 // CONSONANT TABLE DATA & COLUMNS
-const consonantData = [
+// Apply the ConsonantRow type
+const consonantData: ConsonantRow[] = [
   { latin: 'B', pegon: 'ب' }, { latin: 'K', pegon: 'ك' }, { latin: 'S', pegon: 'س' },
   { latin: 'C', pegon: 'چ' }, { latin: 'L', pegon: 'ل' }, { latin: 'T', pegon: 'ت' },
-  { latin: 'D', pegon: 'د' }, { latin: 'M', pegon: 'م' }, { latin: 'V', pegon: 'ف' },
+  { latin: 'D', pegon: 'د' }, { latin: 'M', pegon: 'م' }, { latin: 'V', pegon: 'ڥ' },
   { latin: 'F', pegon: 'ف' }, { latin: 'N', pegon: 'ن' }, { latin: 'W', pegon: 'و' },
-  { latin: 'G', pegon: 'ڮ' }, { latin: 'P', pegon: 'ف' }, { latin: 'Y', pegon: 'ي' },
+  { latin: 'G', pegon: 'ڮ' }, { latin: 'P', pegon: 'ڤ' }, { latin: 'Y', pegon: 'ي' },
   { latin: 'H', pegon: 'ه' }, { latin: 'Q', pegon: 'ق' }, { latin: 'Z', pegon: 'ز' },
   { latin: 'J', pegon: 'ج' }, { latin: 'R', pegon: 'ر' }
-].filter(item => item.latin) // Remove empty entries
+].filter(item => item.latin)
 
-const consonantColumns: TableColumn<typeof consonantData[0]>[] = [
+// Apply the ConsonantRow type
+const consonantColumns: TableColumn<ConsonantRow>[] = [
   {
     accessorKey: 'latin',
     header: 'Latin',
@@ -131,6 +171,7 @@ const consonantColumns: TableColumn<typeof consonantData[0]>[] = [
 ]
 
 // Dynamically split consonants into 3 columns
+// This computed property will now correctly infer its type
 const consonantColumns3 = computed(() => {
   const perColumn = Math.ceil(consonantData.length / 3)
   return [
@@ -141,13 +182,20 @@ const consonantColumns3 = computed(() => {
 })
 
 // SPECIAL COMBINATIONS TABLE DATA & COLUMNS
-const specialCombinations = [
+// Apply the SpecialRow type
+const specialCombinations: SpecialRow[] = [
   { combo: 'NG', pegon: 'ع', example: 'عَاجِي', read: 'Ngaji' },
-  { combo: 'NY', pegon: 'ۑ', example: 'ۑَامُوكْ', read: 'Nyamuk' },
-  { combo: 'SY', pegon: 'ش', example: 'شُوكُورْ', read: 'Syukur' }
+  { combo: 'NY', pegon: 'ۑ', example: 'ۑَامُوكۡ', read: 'Nyamuk' },
+  { combo: 'SY', pegon: 'ش', example: 'شُوكُورۡ', read: 'Syukur' },
+  { combo: 'DZ', pegon: 'ذ', example: 'ذات', read: 'Dzat' },
+  { combo: 'KH', pegon: 'خ', example: 'خُوسُوسۡ', read: 'Khusus' },
+  { combo: 'TO', pegon: 'ط', example: 'طَلٓرَانۡسِي', read: 'Toleransi' },
+  { combo: 'SO', pegon: 'ص', example: 'صَمۡبُوع', read: 'Sombong' },
+  { combo: 'KO', pegon: 'ق', example: 'قَفِي', read: 'Kopi' }
 ]
 
-const specialColumns: TableColumn<typeof specialCombinations[0]>[] = [
+// Apply the SpecialRow type
+const specialColumns: TableColumn<SpecialRow>[] = [
   {
     accessorKey: 'combo',
     header: 'Gabungan',
@@ -169,16 +217,18 @@ const specialColumns: TableColumn<typeof specialCombinations[0]>[] = [
 ]
 
 // ARABIC NAMES TABLE DATA & COLUMNS
-const arabicNames = [
-  { arabic: 'مُحَمَّد', pegon: 'مُحَمَّدْ' },
+// Apply the reusable ArabicRow type
+const arabicNames: ArabicRow[] = [
+  { arabic: 'مُحَمَّد', pegon: 'مُحَمَّدۡ' },
   { arabic: 'عَلِيّ', pegon: 'عَلِي' },
-  { arabic: 'فَاطِمَة', pegon: 'فَاطِمَةْ' },
-  { arabic: 'خَالِد', pegon: 'خَالِدْ' },
-  { arabic: 'عَبْدُ الله', pegon: 'عَبْدُ اللهْ' },
-  { arabic: 'يُوسُف', pegon: 'يُوسُفْ' }
+  { arabic: 'فَاطِمَة', pegon: 'فَاطِمَةۡ' },
+  { arabic: 'خَالِد', pegon: 'خَالِدۡ' },
+  { arabic: 'عَبۡدُ الله', pegon: 'عَبۡدُ اللهۡ' },
+  { arabic: 'يُوسُف', pegon: 'يُوسُفۡ' }
 ]
 
-const arabicNamesColumns: TableColumn<typeof arabicNames[0]>[] = [
+// Apply the reusable ArabicRow type
+const arabicNamesColumns: TableColumn<ArabicRow>[] = [
   {
     accessorKey: 'arabic',
     header: 'Bahasa Arab',
@@ -192,14 +242,16 @@ const arabicNamesColumns: TableColumn<typeof arabicNames[0]>[] = [
 ]
 
 // ARABIC PLACES TABLE DATA & COLUMNS
-const arabicPlaces = [
-  { arabic: 'مَكَّة', pegon: 'مَكَّةْ' },
-  { arabic: 'مَدِينَة', pegon: 'مَدِينَةْ' },
-  { arabic: 'بَغْدَاد', pegon: 'بَغْدَادْ' },
-  { arabic: 'شَام', pegon: 'شَامْ' }
+// Apply the reusable ArabicRow type
+const arabicPlaces: ArabicRow[] = [
+  { arabic: 'مَكَّة', pegon: 'مَكَّةۡ' },
+  { arabic: 'مَدِينَة', pegon: 'مَدِينَةۡ' },
+  { arabic: 'بَغۡدَاد', pegon: 'بَغۡدَادۡ' },
+  { arabic: 'شَام', pegon: 'شَامۡ' }
 ]
 
-const arabicPlacesColumns: TableColumn<typeof arabicPlaces[0]>[] = [
+// Apply the reusable ArabicRow type
+const arabicPlacesColumns: TableColumn<ArabicRow>[] = [
   {
     accessorKey: 'arabic',
     header: 'Bahasa Arab',
@@ -213,17 +265,19 @@ const arabicPlacesColumns: TableColumn<typeof arabicPlaces[0]>[] = [
 ]
 
 // ARABIC TERMS TABLE DATA & COLUMNS
-const arabicTerms = [
-  { arabic: 'إِسْلَام', pegon: 'إِسْلَامْ' },
-  { arabic: 'قُرْآن', pegon: 'قُرْآنْ' },
-  { arabic: 'سُنَّة', pegon: 'سُنَّةْ' },
-  { arabic: 'حَدِيث', pegon: 'حَدِيثْ' },
-  { arabic: 'فِقْه', pegon: 'فِقِهْ' },
-  { arabic: 'تَوْحِيد', pegon: 'تَوْحِيدْ' },
-  { arabic: 'شَرِيعَة', pegon: 'شَرِيعَةْ' }
+// Apply the reusable ArabicRow type
+const arabicTerms: ArabicRow[] = [
+  { arabic: 'إِسۡلَام', pegon: 'إِسۡلَامۡ' },
+  { arabic: 'قُرۡآن', pegon: 'قُرۡآنۡ' },
+  { arabic: 'سُنَّة', pegon: 'سُنَّةۡ' },
+  { arabic: 'حَدِيث', pegon: 'حَدِيثۡ' },
+  { arabic: 'فِقۡه', pegon: 'فِقِهۡ' },
+  { arabic: 'تَوۡحِيد', pegon: 'تَوۡحِيدۡ' },
+  { arabic: 'شَرِيعَة', pegon: 'شَرِيعَةۡ' }
 ]
 
-const arabicTermsColumns: TableColumn<typeof arabicTerms[0]>[] = [
+// Apply the reusable ArabicRow type
+const arabicTermsColumns: TableColumn<ArabicRow>[] = [
   {
     accessorKey: 'arabic',
     header: 'Bahasa Arab',
@@ -406,16 +460,16 @@ const arabicTermsColumns: TableColumn<typeof arabicTerms[0]>[] = [
               💡 Tips Penting
             </h3>
             <ul class="list-disc pl-6 space-y-2 text-sm">
-              <li><strong>Vokal:</strong> Perhatikan posisi huruf vokal (awal, tengah, akhir) karena di beberapa kata
+              <li><strong>Vokal:</strong> Perhatikan penulisan huruf vokal 'o'. Perhatikan penulisan vokal yang bergandengan karena di beberapa kata
                 bentuknya bisa berbeda</li>
-              <li><strong>Gabungan Khusus:</strong> NG, NY, SY memiliki huruf tersendiri dalam Pegon</li>
+              <li><strong>Gabungan Khusus:</strong> TO, SO, KO memiliki huruf tersendiri</li>
               <li><strong>Kata Arab:</strong> Kata benda dari bahasa Arab ditulis menyesuaikan tulisan aslinya</li>
             </ul>
           </div>
 
           <!-- Footer -->
           <div class="mt-8 pt-6 border-t-2 border-primary/20 text-center text-xs text-muted space-y-1">
-            <p>Terakhir diperbarui: Oktober 2025 | Versi 1.0</p>
+            <p>Terakhir diperbarui: November 2025 | Versi 2.0</p>
           </div>
         </div>
 
