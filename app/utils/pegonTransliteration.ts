@@ -71,20 +71,20 @@ const PEGON_MAPS = {
     's': 'س', 't': 'ت', 'w': 'و', 'y': 'ي', 'z': 'ز'
   },
   vowels: {
-    'a': 'َا', 'i': 'ِي', 'u': 'ُو', 'o': 'ٗو', 'e': 'ٓ'
+    'a': 'َا', 'i': 'ِي', 'u': 'ُو', 'o': 'ا۠', 'e': 'ٓ'
   },
   initialVowels: {
-    'a': 'أَ', 'i': 'ئِ', 'u': 'ؤُ', 'o': 'ؤٗ', 'e': 'ئٓ'
+    'a': 'أَ', 'i': 'ئِ', 'u': 'ؤُ', 'o': 'ا۠', 'e': 'ئٓ'
   },
   vowelAfterVowel: {
-    'a': 'أَ', 'i': 'ئِي', 'u': 'ئُو', 'o': 'ئٗو',
+    'a': 'أَ', 'i': 'ئِي', 'u': 'ئُو', 'o': 'ا۠',
   },
   numbers: {
     '0': '٠', '1': '١', '2': '٢', '3': '٣', '4': '٤',
     '5': '٥', '6': '٦', '7': '٧', '8': '٨', '9': '٩'
   },
   diacritics: {
-    sukun: 'ْ', maddah: 'ٓ', fatha: 'َ',
+    sukun: 'ۡ', maddah: 'ٓ', fatha: 'َ',
     kasra: 'ِ', dammah: 'ُ', invertedDammah: 'ٗ'
   }
 } as const
@@ -234,6 +234,17 @@ function tryTwoCharConsonant(word: string, index: number): RuleMatch {
     return { matched: false, pegon: '', consumed: 0 }
   }
 
+  const lastChar = pegonChar.at(-1)
+  const isHarakat = lastChar === 'َ'  // fatha (yang digunakan TO/SO/KO)
+  
+  if (isHarakat) {
+    return {
+      matched: true,
+      pegon: pegonChar,
+      consumed: 2
+    }
+  }
+
   const sukun = needsSukun(index + 1, word) ? PEGON_MAPS.diacritics.sukun : ''
   return {
     matched: true,
@@ -300,7 +311,7 @@ function processSingleConsonant(char: string, nextChar: string, index: number, w
   if (nextChar === 'r') {
     result += PEGON_MAPS.diacritics.maddah
   }
-  if (needsSukun(index, word)) {
+  else if (needsSukun(index, word)) {
     result += PEGON_MAPS.diacritics.sukun
   }
   
