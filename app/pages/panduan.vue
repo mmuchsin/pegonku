@@ -79,7 +79,7 @@ const vowelData: VowelRow[] = [
   {
     letter: 'A',
     awal: { arab: 'أَ', example: 'أَفِيۡ', latin: 'Api' },
-    tengah: { arab: 'ـَا', example: 'فَاسَارۡ', latin: 'Pasar' },
+    tengah: { arab: 'ـَا', example: 'ڤَاسَارۡ', latin: 'Pasar' },
     akhir: { arab: 'ـَا', example: 'سَامَا', latin: 'Sama' }
   },
   {
@@ -103,7 +103,7 @@ const vowelData: VowelRow[] = [
   {
     letter: 'O',
     awal: { arab: 'ا۠', example: 'ا۠رَاعۡ', latin: 'Orang' },
-    tengah: { arab: 'ا۠', example: 'تا۠فِي', latin: 'Topi' },
+    tengah: { arab: 'ا۠', example: 'تا۠ڤِي', latin: 'Topi' },
     akhir: { arab: 'ا۠', example: 'جَاڮا۠', latin: 'Jago' }
   }
 ]
@@ -190,8 +190,8 @@ const specialCombinations: SpecialRow[] = [
   { combo: 'DZ', pegon: 'ذ', example: 'ذات', read: 'Dzat' },
   { combo: 'KH', pegon: 'خ', example: 'خُوسُوسۡ', read: 'Khusus' },
   { combo: 'TO', pegon: 'ط', example: 'طَلٓرَانۡسِي', read: 'Toleransi' },
-  { combo: 'SO', pegon: 'ص', example: 'صَمۡبُوع', read: 'Sombong' },
-  { combo: 'KO', pegon: 'ق', example: 'قَفِي', read: 'Kopi' }
+  { combo: 'SO', pegon: 'ص', example: 'صَمۡبا۠ع', read: 'Sombong' },
+  { combo: 'KO', pegon: 'ق', example: 'قَڤِي', read: 'Kopi' }
 ]
 
 // Apply the SpecialRow type
