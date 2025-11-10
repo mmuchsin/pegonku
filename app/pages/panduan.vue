@@ -78,21 +78,21 @@ function completeOnboarding() {
 const vowelData: VowelRow[] = [
   {
     letter: 'A',
-    awal: { arab: 'أَ', example: 'أَڤِيۡ', latin: 'Api' },
+    awal: { arab: 'أَ', example: 'أَڤِي', latin: 'Api' },
     tengah: { arab: 'ـَا / أَ', example: 'ڤَاسَارۡ / كٓأَدَأَنۡ', latin: 'Keadaan / Pasar' },
     akhir: { arab: 'ـَا / أَ', example: 'سَامَا / كِيمِيأَ', latin: 'Kimia / Sama' }
   },
   {
     letter: 'I',
-    awal: { arab: 'ئِ', example: 'ئِتُوۡ', latin: 'Itu' },
+    awal: { arab: 'ئِ', example: 'ئِتُو', latin: 'Itu' },
     tengah: { arab: 'ـِي / ئِ', example: 'تِيۡڮَا / بَائِكۡ', latin: 'Baik / Tiga' },
-    akhir: { arab: 'ـِي / ئِ', example: 'سِينِيۡ / مٓنۡچِينۡتَائِ', latin: 'Mencintai / Sini' }
+    akhir: { arab: 'ـِي / ئِ', example: 'سِينِي / مٓنۡچِينۡتَائِ', latin: 'Mencintai / Sini' }
   },
   {
     letter: 'U',
-    awal: { arab: 'ؤُ', example: 'ؤُبِيۡ', latin: 'Ubi' },
-    tengah: { arab: 'ـُو / ؤُ', example: 'كُوۡكُو / كٓؤُتَامَأَنۡ', latin: 'Keutamaan / Kuku' },
-    akhir: { arab: 'ـُو / ؤُ', example: 'سُوكُوۡ / مَاؤُ', latin: 'Mau / Suku' }
+    awal: { arab: 'ؤُ', example: 'ؤُبِي', latin: 'Ubi' },
+    tengah: { arab: 'ـُو / ؤُ', example: 'كُوكُو / كٓؤُتَامَأَنۡ', latin: 'Keutamaan / Kuku' },
+    akhir: { arab: 'ـُو / ؤُ', example: 'سُوكُو / مَاؤُ', latin: 'Mau / Suku' }
   },
   {
     letter: 'E',
