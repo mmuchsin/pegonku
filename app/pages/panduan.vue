@@ -78,33 +78,33 @@ function completeOnboarding() {
 const vowelData: VowelRow[] = [
   {
     letter: 'A',
-    awal: { arab: 'أَ', example: 'أَفِيۡ', latin: 'Api' },
-    tengah: { arab: 'ـَا', example: 'ڤَاسَارۡ', latin: 'Pasar' },
-    akhir: { arab: 'ـَا', example: 'سَامَا', latin: 'Sama' }
+    awal: { arab: 'أَ', example: 'أَڤِيۡ', latin: 'Api' },
+    tengah: { arab: 'ـَا / أَ', example: 'ڤَاسَارۡ / كٓأَدَأَنۡ', latin: 'Keadaan / Pasar' },
+    akhir: { arab: 'ـَا / أَ', example: 'سَامَا / كِيمِيأَ', latin: 'Kimia / Sama' }
   },
   {
     letter: 'I',
-    awal: { arab: 'ئِ', example: 'ئِتُو', latin: 'Itu' },
-    tengah: { arab: 'ـِي', example: 'تِيۡڮَا', latin: 'Tiga' },
-    akhir: { arab: 'ـِي', example: 'سِينِي', latin: 'Sini' }
+    awal: { arab: 'ئِ', example: 'ئِتُوۡ', latin: 'Itu' },
+    tengah: { arab: 'ـِي / ئِ', example: 'تِيۡڮَا / بَائِكۡ', latin: 'Baik / Tiga' },
+    akhir: { arab: 'ـِي / ئِ', example: 'سِينِيۡ / مٓنۡچِينۡتَائِ', latin: 'Mencintai / Sini' }
   },
   {
     letter: 'U',
-    awal: { arab: 'ؤُ', example: 'ؤُبِي', latin: 'Ubi' },
-    tengah: { arab: 'ـُو', example: 'كُوكُو', latin: 'Kuku' },
-    akhir: { arab: 'ـُو', example: 'سُوكُو', latin: 'Suku' }
+    awal: { arab: 'ؤُ', example: 'ؤُبِيۡ', latin: 'Ubi' },
+    tengah: { arab: 'ـُو / ؤُ', example: 'كُوۡكُو / كٓؤُتَامَأَنۡ', latin: 'Keutamaan / Kuku' },
+    akhir: { arab: 'ـُو / ؤُ', example: 'سُوكُوۡ / مَاؤُ', latin: 'Mau / Suku' }
   },
   {
     letter: 'E',
     awal: { arab: 'ئٓ', example: 'ئٓنَاكۡ', latin: 'Enak' },
-    tengah: { arab: 'ـٓ', example: 'بٓكَالۡ', latin: 'Bekal' },
-    akhir: { arab: 'ـٓ', example: 'نَاسِي', latin: 'Nasi' }
+    tengah: { arab: 'ـٓ / ئٓ', example: 'بٓكَالۡ / كٓئٓنَاكَانۡ', latin: 'Keenakan / Bekal' },
+    akhir: { arab: 'ـٓ / ئٓ', example: 'سَاتٓ / كُوئٓ', latin: 'Kue / Sate' }
   },
   {
     letter: 'O',
-    awal: { arab: 'ا۠', example: 'ا۠رَاعۡ', latin: 'Orang' },
-    tengah: { arab: 'ا۠', example: 'با۠لٓهۡ', latin: 'Boleh' },
-    akhir: { arab: 'ا۠', example: 'جَاڮا۠', latin: 'Jago' }
+    awal: { arab: 'ا۠ ۠', example: 'ا۠رَاعۡ', latin: 'Orang' },
+    tengah: { arab: 'ا۠', example: 'ما۠بِيلۡ / كٓا۠رۡڮَانِيسَاسِيأَنۡ', latin: 'Keorganisasian / Mobil' },
+    akhir: { arab: 'ا۠', example: 'جَاڮا۠ / رَادِيا۠', latin: ' Radio / Jago' }
   }
 ]
 
@@ -326,9 +326,9 @@ const arabicTermsColumns: TableColumn<ArabicRow>[] = [
           <!-- Title -->
           <div class="text-center pb-6 border-b-2 border-primary/20">
             <h1 class="text-3xl md:text-4xl font-bold text-primary mb-2">
-              ✨ Panduan Pegon Lengkap ✨
+              ✨ Panduan Pegon✨
             </h1>
-            <p class="text-muted text-sm">Panduan Resmi Penulisan Aksara Pegon</p>
+            <p class="text-muted text-sm">Panduan Penulisan Aksara Pegon</p>
           </div>
 
           <!-- SECTION 1: VOWELS -->
@@ -474,9 +474,9 @@ const arabicTermsColumns: TableColumn<ArabicRow>[] = [
               💡 Tips Penting
             </h3>
             <ul class="list-disc pl-6 space-y-2 text-sm">
-              <li><strong>Vokal:</strong> Perhatikan penulisan huruf vokal 'o'. Perhatikan penulisan vokal yang
-                bergandengan karena di beberapa kata
-                bentuknya bisa berbeda</li>
+              <li><strong>Vokal:</strong> Perhatikan penulisan huruf vokal "o". Penulisan vokal yang bergandengan --
+                seperti "aa, ai, au, ae, ao dan sebagainya"-- ditulis sesuai hurufnya bukan bunyi pengucapannya untuk
+                menjaga konsistensi penulisan</li>
               <li><strong>Gabungan Khusus:</strong> TO, SO, KO memiliki huruf tersendiri</li>
               <li><strong>Kata Arab:</strong> Kata benda dari bahasa Arab ditulis menyesuaikan tulisan aslinya</li>
             </ul>
@@ -484,7 +484,7 @@ const arabicTermsColumns: TableColumn<ArabicRow>[] = [
 
           <!-- Footer -->
           <div class="mt-8 pt-6 border-t-2 border-primary/20 text-center text-xs text-muted space-y-1">
-            <p>Terakhir diperbarui: November 2025 | Versi 2.0</p>
+            <p>Terakhir diperbarui: 10 November 2025 | Versi 2.1</p>
           </div>
         </div>
 
