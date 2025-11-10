@@ -77,7 +77,7 @@ const PEGON_MAPS = {
     'a': 'أَ', 'i': 'ئِ', 'u': 'ؤُ', 'o': 'ا۠', 'e': 'ئٓ'
   },
   vowelAfterVowel: {
-    'a': 'أَ', 'i': 'ئِي', 'u': 'ئُو', 'o': 'ا۠',
+    'a': 'أَ', 'i': 'ئِ', 'u': 'ؤُ', 'o': 'ا۠','e': 'ئٓ'
   },
   numbers: {
     '0': '٠', '1': '١', '2': '٢', '3': '٣', '4': '٤',
@@ -85,13 +85,13 @@ const PEGON_MAPS = {
   },
   diacritics: {
     sukun: 'ۡ', maddah: 'ٓ', fatha: 'َ',
-    kasra: 'ِ', dammah: 'ُ', invertedDammah: 'ٗ'
+    kasra: 'ِ', dammah: 'ُ',
   }
 } as const
 
 const VOWEL_CHARS = 'aiueo'
 const DIPHTHONGS = [
-  { pattern: 'ua', replacement: 'ُووَا', needsPrefix: true },
+  // { pattern: 'ua', replacement: 'ُؤوَا', needsPrefix: true },
   { pattern: 'au', replacement: 'َاؤُ', needsPrefix: false },
   { pattern: 'aa', replacement: 'َأَ', needsPrefix: false }
 ] as const
